@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { getBannerAssignment } from '@/lib/utils';
 import type { BannerData } from '@/lib/types';
 
@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
   void age;
 
   // Fetch personalized banner
+  const supabase = getSupabaseClient();
   const { data: personalizedBanner } = await supabase
     .from('banners')
     .select('image_url')
