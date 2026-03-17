@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const supabase = getSupabaseClient();
     const { error } = await supabase.from('responses').insert({
       participant_id,
       initiative_id,
