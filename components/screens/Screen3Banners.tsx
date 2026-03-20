@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import type { Demographics, BannerData } from '@/lib/types';
-import { getAgeGroup, getDecisionStyleBucket } from '@/lib/utils';
+import { getDecisionStyleBucket } from '@/lib/utils';
 
 interface Props {
   initiativeId: 1 | 2;
@@ -42,13 +42,11 @@ export default function Screen3Banners({
   const info = INITIATIVE_DESCRIPTIONS[initiativeId];
 
   const fetchBanners = useCallback(async () => {
-    const ageGroup = getAgeGroup(demographics.age);
     const decisionStyleBucket = getDecisionStyleBucket(demographics.decisionStyle);
 
     const params = new URLSearchParams({
       initiativeId: String(initiativeId),
-      age: String(demographics.age),
-      ageGroup,
+      ageGroup: demographics.ageGroup,
       politicalOrientation: String(demographics.politicalOrientation),
       decisionStyle: decisionStyleBucket,
       group,

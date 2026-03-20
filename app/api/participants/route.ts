@@ -6,17 +6,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       group_assignment,
-      age,
+      age_group,
       region_type,
       gender,
       political_orientation,
       decision_style,
     } = body;
 
+    const VALID_AGE_GROUPS = ['18-29', '30-44', '45-59', '60+'];
+
     // Basic validation
     if (
       !group_assignment ||
-      !age ||
+      !age_group ||
       !region_type ||
       !gender ||
       !political_orientation ||
@@ -28,9 +30,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (age < 18 || age > 120) {
+    if (typeof age_group !== 'string' || !VALID_AGE_GROUPS.includes(age_group)) {
       return NextResponse.json(
-        { error: 'Ungültiges Alter.' },
+        { error: 'Ungültige Altersgruppe.' },
         { status: 400 }
       );
     }
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
       .from('participants')
       .insert({
         group_assignment,
-        age,
+        age_group,
         region_type,
         gender,
         political_orientation,
