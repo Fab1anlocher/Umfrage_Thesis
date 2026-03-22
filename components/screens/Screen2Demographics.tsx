@@ -160,7 +160,7 @@ export default function Screen2Demographics({ group, testMode = false, onComplet
           <PillToggle
             options={GENDER_OPTIONS}
             value={gender}
-            onChange={(v) => setGender(v)}
+            onChange={(v) => setGender(v as 'männlich' | 'weiblich')}
             wrap
           />
           {errors.gender && (

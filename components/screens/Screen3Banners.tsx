@@ -66,7 +66,7 @@ export default function Screen3Banners({
     } catch {
       setLoadError(true);
     }
-  }, [initiativeId, group, demographics]);
+  }, [initiativeId, group, demographics, isTestMode]);
 
   useEffect(() => {
     fetchBanners();
