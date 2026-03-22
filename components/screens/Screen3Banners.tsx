@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import type { Demographics, BannerData } from '@/lib/types';
-import { getDecisionStyleBucket } from '@/lib/utils';
+import { getDecisionStyleBucket, getBannerAssignment } from '@/lib/utils';
 
 interface Props {
   initiativeId: 1 | 2;
@@ -54,6 +54,8 @@ export default function Screen3Banners({
       politicalOrientation: String(demographics.politicalOrientation),
       decisionStyle: decisionStyleBucket,
       group,
+      // Tell the API to skip DB when UI test mode toggle is active
+      testMode: String(isTestMode),
     });
 
     try {
@@ -72,10 +74,11 @@ export default function Screen3Banners({
 
   // Countdown timer – starts once banners are loaded (or test mode).
   // Guard prevents double-start if bannerData change re-triggers the effect.
+  // In test mode we always start, even if loadError occurred (no real DB needed).
   useEffect(() => {
     if (timerStarted.current) return;
     if (!bannerData && !isTestMode) return;
-    if (loadError) return;
+    if (loadError && !isTestMode) return;
 
     timerStarted.current = true;
 
@@ -94,7 +97,19 @@ export default function Screen3Banners({
   }, [bannerData, isTestMode, loadError]);
 
   const handleContinue = () => {
-    if (bannerData) onComplete(bannerData);
+    if (bannerData) {
+      onComplete(bannerData);
+    } else if (isTestMode) {
+      // In test mode without real banner data, derive types from crossover design
+      const { aType, bType } = getBannerAssignment(group, initiativeId);
+      onComplete({
+        bannerAUrl: null,
+        bannerBUrl: null,
+        bannerAType: aType,
+        bannerBType: bType,
+        fallbackUsed: false,
+      });
+    }
   };
 
   const isLoading = !bannerData && !loadError && !isTestMode;

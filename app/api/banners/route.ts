@@ -3,23 +3,48 @@ import { getSupabaseClient } from '@/lib/supabase';
 import { getBannerAssignment } from '@/lib/utils';
 import type { BannerData } from '@/lib/types';
 
+const VALID_INITIATIVE_IDS = [1, 2];
+const VALID_AGE_GROUPS = ['18-29', '30-44', '45-59', '60+'];
+const VALID_DECISION_STYLES = ['rational', 'emotional'];
+const VALID_GROUPS = ['A', 'B'];
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
-  const initiativeId = parseInt(searchParams.get('initiativeId') || '1') as 1 | 2;
-  const ageGroup = searchParams.get('ageGroup') || '18-29';
-  const politicalOrientation = parseInt(
-    searchParams.get('politicalOrientation') || '3'
-  );
-  const decisionStyle = (searchParams.get('decisionStyle') || 'rational') as
-    | 'rational'
-    | 'emotional';
-  const group = (searchParams.get('group') || 'A') as 'A' | 'B';
+  // Parse and validate query parameters
+  const initiativeIdRaw = parseInt(searchParams.get('initiativeId') || '');
+  const ageGroup = searchParams.get('ageGroup') || '';
+  const politicalOrientationRaw = parseInt(searchParams.get('politicalOrientation') || '');
+  const decisionStyle = searchParams.get('decisionStyle') || '';
+  const group = searchParams.get('group') || '';
+  // testMode can be signalled via URL param (e.g. when env var is not set)
+  const testModeParam = searchParams.get('testMode') === 'true';
 
-  const assignment = getBannerAssignment(group, initiativeId);
+  // Validate all parameters before proceeding
+  if (!VALID_INITIATIVE_IDS.includes(initiativeIdRaw)) {
+    return NextResponse.json({ error: 'Ungültige initiativeId.' }, { status: 400 });
+  }
+  if (!VALID_AGE_GROUPS.includes(ageGroup)) {
+    return NextResponse.json({ error: 'Ungültige ageGroup.' }, { status: 400 });
+  }
+  if (isNaN(politicalOrientationRaw) || politicalOrientationRaw < 1 || politicalOrientationRaw > 5) {
+    return NextResponse.json({ error: 'Ungültige politicalOrientation.' }, { status: 400 });
+  }
+  if (!VALID_DECISION_STYLES.includes(decisionStyle)) {
+    return NextResponse.json({ error: 'Ungültiger decisionStyle.' }, { status: 400 });
+  }
+  if (!VALID_GROUPS.includes(group)) {
+    return NextResponse.json({ error: 'Ungültige group.' }, { status: 400 });
+  }
 
-  // Test mode: skip DB lookup entirely
-  if (process.env.NEXT_PUBLIC_TEST_MODE === 'true') {
+  const initiativeId = initiativeIdRaw as 1 | 2;
+  const politicalOrientation = politicalOrientationRaw;
+  const assignment = getBannerAssignment(group as 'A' | 'B', initiativeId);
+
+  // Test mode: skip DB lookup and return placeholder data with correct types.
+  // Triggered by env var (always-on) or URL param (UI toggle).
+  const isTestMode = process.env.NEXT_PUBLIC_TEST_MODE === 'true' || testModeParam;
+  if (isTestMode) {
     const result: BannerData = {
       bannerAUrl: null,
       bannerBUrl: null,
@@ -30,7 +55,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   }
 
-  // Fetch personalized banner
+  // Fetch the matching personalised banner from the DB
   const supabase = getSupabaseClient();
   const { data: personalizedBanner } = await supabase
     .from('banners')
@@ -43,7 +68,7 @@ export async function GET(request: NextRequest) {
     .limit(1)
     .maybeSingle();
 
-  // Fetch neutral banner
+  // Fetch the neutral banner for this initiative
   const { data: neutralBanner } = await supabase
     .from('banners')
     .select('image_url')
@@ -55,7 +80,9 @@ export async function GET(request: NextRequest) {
   const personalizedUrl: string | null = personalizedBanner?.image_url ?? null;
   const neutralUrl: string | null = neutralBanner?.image_url ?? null;
 
-  // Fallback: if no personalised banner found, use neutral for both slots
+  // Fallback: if no personalised banner found, use neutral for both slots.
+  // fallbackUsed is stored in the responses table so affected entries can be
+  // excluded or weighted during analysis.
   if (!personalizedUrl) {
     const result: BannerData = {
       bannerAUrl: neutralUrl,
@@ -67,11 +94,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   }
 
+  // Assign URLs according to the crossover design (aType / bType from getBannerAssignment)
   const result: BannerData = {
-    bannerAUrl:
-      assignment.aType === 'personalized' ? personalizedUrl : neutralUrl,
-    bannerBUrl:
-      assignment.bType === 'personalized' ? personalizedUrl : neutralUrl,
+    bannerAUrl: assignment.aType === 'personalized' ? personalizedUrl : neutralUrl,
+    bannerBUrl: assignment.bType === 'personalized' ? personalizedUrl : neutralUrl,
     bannerAType: assignment.aType,
     bannerBType: assignment.bType,
     fallbackUsed: false,

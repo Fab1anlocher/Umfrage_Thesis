@@ -10,6 +10,8 @@ interface Props {
   participantId: string;
   group: 'A' | 'B';
   bannerData: BannerData;
+  /** TEST MODE – skip DB write when true */
+  testMode?: boolean;
   onComplete: () => void;
 }
 
@@ -24,6 +26,7 @@ export default function Screen4Questions({
   participantId,
   group,
   bannerData,
+  testMode = false,
   onComplete,
 }: Props) {
   const [votingIntention, setVotingIntention] = useState(3);
@@ -54,6 +57,12 @@ export default function Screen4Questions({
     setSubmitError(null);
 
     try {
+      // In test mode: skip DB write entirely
+      if (testMode) {
+        onComplete();
+        return;
+      }
+
       const res = await fetch('/api/responses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

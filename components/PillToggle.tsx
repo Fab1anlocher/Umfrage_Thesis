@@ -19,7 +19,7 @@ export default function PillToggle({
   wrap = false,
 }: PillToggleProps) {
   return (
-    <div className={`flex gap-2 ${wrap ? 'flex-wrap' : 'flex-wrap'}`}>
+    <div className={`flex gap-2 ${wrap ? 'flex-wrap' : ''}`}>
       {options.map((opt) => {
         const selected = value === opt.value;
         return (

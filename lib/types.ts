@@ -3,7 +3,7 @@ export type GroupAssignment = 'A' | 'B';
 export interface Demographics {
   ageGroup: string;
   regionType: 'stadt' | 'agglomeration' | 'land';
-  gender: string;
+  gender: 'männlich' | 'weiblich';
   politicalOrientation: number; // 1–5
   decisionStyle: number; // 1–5
 }

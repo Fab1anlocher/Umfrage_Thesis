@@ -7,6 +7,7 @@ import type { Demographics } from '@/lib/types';
 
 interface Props {
   group: 'A' | 'B';
+  testMode?: boolean;
   onComplete: (data: Demographics, participantId: string) => void;
 }
 
@@ -32,11 +33,9 @@ const REGION_OPTIONS = [
 const GENDER_OPTIONS = [
   { value: 'männlich', label: 'Männlich' },
   { value: 'weiblich', label: 'Weiblich' },
-  { value: 'divers', label: 'Divers' },
-  { value: 'keine_angabe', label: 'Keine Angabe' },
 ];
 
-export default function Screen2Demographics({ group, onComplete }: Props) {
+export default function Screen2Demographics({ group, testMode = false, onComplete }: Props) {
   const [ageGroup, setAgeGroup] = useState<string | null>(null);
   const [regionType, setRegionType] = useState<string | null>(null);
   const [gender, setGender] = useState<string | null>(null);
@@ -79,6 +78,11 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
         politicalOrientation,
         decisionStyle,
       };
+
+      if (testMode) {
+        onComplete(demographics, 'test-' + Date.now());
+        return;
+      }
 
       const res = await fetch('/api/participants', {
         method: 'POST',
@@ -179,9 +183,13 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
 
         {/* Entscheidungsstil */}
         <div className="mb-10">
-          <label className="block text-sm font-medium text-[#1D1D1F] mb-3">
+          <label className="block text-sm font-medium text-[#1D1D1F] mb-1">
             Entscheidungsstil
           </label>
+          <p className="text-xs text-[#6E6E73] mb-3 leading-relaxed">
+            <span className="font-medium text-[#1D1D1F]">Rational</span> = Sie wägen Fakten, Zahlen und logische Argumente ab. &nbsp;
+            <span className="font-medium text-[#1D1D1F]">Emotional</span> = Sie verlassen sich eher auf Ihr Bauchgefühl und persönliche Werte.
+          </p>
           <RangeSlider
             value={decisionStyle}
             onChange={setDecisionStyle}

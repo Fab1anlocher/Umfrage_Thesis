@@ -108,6 +108,7 @@ export default function SurveyPage() {
         {step === 'demographics' && group && (
           <Screen2Demographics
             group={group}
+            testMode={testMode}
             onComplete={handleDemographicsComplete}
           />
         )}
@@ -131,6 +132,7 @@ export default function SurveyPage() {
               participantId={participantId}
               group={group}
               bannerData={bannerData1}
+              testMode={testMode}
               onComplete={handleQuestions1Complete}
             />
           )}
@@ -154,6 +156,7 @@ export default function SurveyPage() {
               participantId={participantId}
               group={group}
               bannerData={bannerData2}
+              testMode={testMode}
               onComplete={handleQuestions2Complete}
             />
           )}
