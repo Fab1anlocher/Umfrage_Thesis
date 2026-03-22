@@ -9,6 +9,8 @@ interface Props {
   initiativeId: 1 | 2;
   group: 'A' | 'B';
   demographics: Demographics;
+  /** TEST MODE – remove this prop (and all isTestMode usages) to delete the feature */
+  testMode?: boolean;
   onComplete: (data: BannerData) => void;
 }
 
@@ -31,8 +33,10 @@ export default function Screen3Banners({
   initiativeId,
   group,
   demographics,
+  testMode,
   onComplete,
 }: Props) {
+  const isTestMode = testMode ?? TEST_MODE;
   const [bannerData, setBannerData] = useState<BannerData | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [countdown, setCountdown] = useState(3);
@@ -70,7 +74,7 @@ export default function Screen3Banners({
   // Guard prevents double-start if bannerData change re-triggers the effect.
   useEffect(() => {
     if (timerStarted.current) return;
-    if (!bannerData && !TEST_MODE) return;
+    if (!bannerData && !isTestMode) return;
     if (loadError) return;
 
     timerStarted.current = true;
@@ -87,13 +91,13 @@ export default function Screen3Banners({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [bannerData, loadError]);
+  }, [bannerData, isTestMode, loadError]);
 
   const handleContinue = () => {
     if (bannerData) onComplete(bannerData);
   };
 
-  const isLoading = !bannerData && !loadError && !TEST_MODE;
+  const isLoading = !bannerData && !loadError && !isTestMode;
 
   return (
     <div className="screen-enter py-8">
@@ -121,21 +125,21 @@ export default function Screen3Banners({
         </p>
       )}
 
-      {(bannerData || TEST_MODE) && !loadError && (
+      {(bannerData || isTestMode) && !loadError && (
         <div className="flex flex-col md:flex-row gap-5 mb-8">
           <BannerCard
             label="Banner A"
             url={bannerData?.bannerAUrl ?? null}
             type={bannerData?.bannerAType ?? 'neutral'}
             initiativeId={initiativeId}
-            isTestMode={TEST_MODE}
+            isTestMode={isTestMode}
           />
           <BannerCard
             label="Banner B"
             url={bannerData?.bannerBUrl ?? null}
             type={bannerData?.bannerBType ?? 'personalized'}
             initiativeId={initiativeId}
-            isTestMode={TEST_MODE}
+            isTestMode={isTestMode}
           />
         </div>
       )}
