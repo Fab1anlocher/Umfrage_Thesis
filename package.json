@@ -10,8 +10,10 @@
     "seed:banners": "tsx scripts/seed-banners.ts"
   },
   "dependencies": {
+    "@google/genai": "^1.46.0",
     "@supabase/supabase-js": "^2.43.4",
     "next": "14.2.5",
+    "openai": "^6.32.0",
     "react": "^18",
     "react-dom": "^18"
   },
