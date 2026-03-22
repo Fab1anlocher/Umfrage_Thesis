@@ -11,28 +11,23 @@ export async function POST(request: NextRequest) {
       banner_a_type,
       banner_b_type,
       voting_intention,
-      preferred_banner,
-      persuasiveness_a,
-      persuasiveness_b,
+      credibility,
+      personalization_felt,
       fallback_used,
     } = body;
 
-    // Basic validation
+    // Validation
     if (
       !participant_id ||
       !initiative_id ||
       !group_assignment ||
       !banner_a_type ||
       !banner_b_type ||
-      !voting_intention ||
-      !preferred_banner ||
-      !persuasiveness_a ||
-      !persuasiveness_b
+      voting_intention == null ||
+      credibility == null ||
+      personalization_felt == null
     ) {
-      return NextResponse.json(
-        { error: 'Fehlende Pflichtfelder.' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Fehlende Pflichtfelder.' }, { status: 400 });
     }
 
     const supabase = getSupabaseClient();
@@ -43,9 +38,8 @@ export async function POST(request: NextRequest) {
       banner_a_type,
       banner_b_type,
       voting_intention,
-      preferred_banner,
-      persuasiveness_a,
-      persuasiveness_b,
+      credibility,
+      personalization_felt,
       fallback_used: fallback_used ?? false,
     });
 
@@ -60,9 +54,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (err) {
     console.error('Unexpected error:', err);
-    return NextResponse.json(
-      { error: 'Interner Serverfehler.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Interner Serverfehler.' }, { status: 500 });
   }
 }

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import PillToggle from '@/components/PillToggle';
 import RangeSlider from '@/components/RangeSlider';
-import type { Demographics } from '@/lib/types';
+import type { Demographics, DecisionStyle } from '@/lib/types';
 
 interface Props {
   group: 'A' | 'B';
@@ -13,8 +13,8 @@ interface Props {
 
 interface FormErrors {
   ageGroup?: string;
-  regionType?: string;
   gender?: string;
+  decisionStyle?: string;
 }
 
 const AGE_GROUP_OPTIONS = [
@@ -24,38 +24,31 @@ const AGE_GROUP_OPTIONS = [
   { value: '60+', label: '60+' },
 ];
 
-const REGION_OPTIONS = [
-  { value: 'stadt', label: 'Stadt' },
-  { value: 'agglomeration', label: 'Agglomeration' },
-  { value: 'land', label: 'Land' },
-];
-
 const GENDER_OPTIONS = [
   { value: 'männlich', label: 'Männlich' },
   { value: 'weiblich', label: 'Weiblich' },
 ];
 
+const DECISION_STYLE_OPTIONS = [
+  { value: 'rational',   label: 'Rational' },
+  { value: 'ausgewogen', label: 'Ausgewogen' },
+  { value: 'emotional',  label: 'Emotional' },
+];
+
 export default function Screen2Demographics({ group, testMode = false, onComplete }: Props) {
   const [ageGroup, setAgeGroup] = useState<string | null>(null);
-  const [regionType, setRegionType] = useState<string | null>(null);
   const [gender, setGender] = useState<'männlich' | 'weiblich' | null>(null);
   const [politicalOrientation, setPoliticalOrientation] = useState(3);
-  const [decisionStyle, setDecisionStyle] = useState(3);
+  const [decisionStyle, setDecisionStyle] = useState<DecisionStyle | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const validate = (): FormErrors => {
     const errs: FormErrors = {};
-    if (!ageGroup) {
-      errs.ageGroup = 'Bitte wählen Sie Ihre Altersgruppe aus.';
-    }
-    if (!regionType) {
-      errs.regionType = 'Bitte wählen Sie Ihre Wohnregion aus.';
-    }
-    if (!gender) {
-      errs.gender = 'Bitte wählen Sie eine Option aus.';
-    }
+    if (!ageGroup) errs.ageGroup = 'Bitte wählen Sie Ihre Altersgruppe aus.';
+    if (!gender) errs.gender = 'Bitte wählen Sie eine Option aus.';
+    if (!decisionStyle) errs.decisionStyle = 'Bitte wählen Sie Ihren Entscheidungsstil aus.';
     return errs;
   };
 
@@ -73,10 +66,9 @@ export default function Screen2Demographics({ group, testMode = false, onComplet
     try {
       const demographics: Demographics = {
         ageGroup: ageGroup!,
-        regionType: regionType as Demographics['regionType'],
         gender: gender!,
         politicalOrientation,
-        decisionStyle,
+        decisionStyle: decisionStyle!,
       };
 
       if (testMode) {
@@ -90,7 +82,6 @@ export default function Screen2Demographics({ group, testMode = false, onComplet
         body: JSON.stringify({
           group_assignment: group,
           age_group: demographics.ageGroup,
-          region_type: demographics.regionType,
           gender: demographics.gender,
           political_orientation: demographics.politicalOrientation,
           decision_style: demographics.decisionStyle,
@@ -137,21 +128,6 @@ export default function Screen2Demographics({ group, testMode = false, onComplet
           )}
         </div>
 
-        {/* Wohnregion */}
-        <div className="mb-7">
-          <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
-            Wohnregion
-          </label>
-          <PillToggle
-            options={REGION_OPTIONS}
-            value={regionType}
-            onChange={(v) => setRegionType(v)}
-          />
-          {errors.regionType && (
-            <p className="mt-1.5 text-sm text-red-500">{errors.regionType}</p>
-          )}
-        </div>
-
         {/* Geschlecht */}
         <div className="mb-7">
           <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
@@ -161,7 +137,6 @@ export default function Screen2Demographics({ group, testMode = false, onComplet
             options={GENDER_OPTIONS}
             value={gender}
             onChange={(v) => setGender(v as 'männlich' | 'weiblich')}
-            wrap
           />
           {errors.gender && (
             <p className="mt-1.5 text-sm text-red-500">{errors.gender}</p>
@@ -187,15 +162,18 @@ export default function Screen2Demographics({ group, testMode = false, onComplet
             Entscheidungsstil
           </label>
           <p className="text-xs text-[#6E6E73] mb-3 leading-relaxed">
-            <span className="font-medium text-[#1D1D1F]">Rational</span> = Sie wägen Fakten, Zahlen und logische Argumente ab. &nbsp;
-            <span className="font-medium text-[#1D1D1F]">Emotional</span> = Sie verlassen sich eher auf Ihr Bauchgefühl und persönliche Werte.
+            <span className="font-medium text-[#1D1D1F]">Rational</span> = Fakten, Zahlen und logische Argumente. &nbsp;
+            <span className="font-medium text-[#1D1D1F]">Ausgewogen</span> = Kombination aus beidem. &nbsp;
+            <span className="font-medium text-[#1D1D1F]">Emotional</span> = Bauchgefühl und persönliche Werte.
           </p>
-          <RangeSlider
+          <PillToggle
+            options={DECISION_STYLE_OPTIONS}
             value={decisionStyle}
-            onChange={setDecisionStyle}
-            leftLabel="Rational"
-            rightLabel="Emotional"
+            onChange={(v) => setDecisionStyle(v as DecisionStyle)}
           />
+          {errors.decisionStyle && (
+            <p className="mt-1.5 text-sm text-red-500">{errors.decisionStyle}</p>
+          )}
         </div>
 
         {submitError && (

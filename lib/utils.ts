@@ -1,13 +1,4 @@
 /**
- * Maps a numeric decision-style score (1–5) to a bucket label.
- * Scores of 4 or 5 → 'emotional', scores of 1–3 → 'rational'.
- * Used to select the matching personalised banner from the DB.
- */
-export function getDecisionStyleBucket(score: number): 'rational' | 'emotional' {
-  return score >= 4 ? 'emotional' : 'rational';
-}
-
-/**
  * Returns the banner type assignment for each slot (A / B) based on the
  * crossover design:
  *

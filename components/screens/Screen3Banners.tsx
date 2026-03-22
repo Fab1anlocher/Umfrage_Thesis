@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import type { Demographics, BannerData } from '@/lib/types';
-import { getDecisionStyleBucket, getBannerAssignment } from '@/lib/utils';
+import { getBannerAssignment } from '@/lib/utils';
 
 interface Props {
   initiativeId: 1 | 2;
@@ -46,13 +46,11 @@ export default function Screen3Banners({
   const info = INITIATIVE_DESCRIPTIONS[initiativeId];
 
   const fetchBanners = useCallback(async () => {
-    const decisionStyleBucket = getDecisionStyleBucket(demographics.decisionStyle);
-
     const params = new URLSearchParams({
       initiativeId: String(initiativeId),
       ageGroup: demographics.ageGroup,
       politicalOrientation: String(demographics.politicalOrientation),
-      decisionStyle: decisionStyleBucket,
+      decisionStyle: demographics.decisionStyle,
       group,
       // Tell the API to skip DB when UI test mode toggle is active
       testMode: String(isTestMode),

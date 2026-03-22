@@ -1,40 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 
+const VALID_AGE_GROUPS      = ['18-29', '30-44', '45-59', '60+'];
+const VALID_GENDERS         = ['männlich', 'weiblich'];
+const VALID_DECISION_STYLES = ['rational', 'ausgewogen', 'emotional'];
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
       group_assignment,
       age_group,
-      region_type,
       gender,
       political_orientation,
       decision_style,
     } = body;
 
-    const VALID_AGE_GROUPS = ['18-29', '30-44', '45-59', '60+'];
-
-    // Basic validation
-    if (
-      !group_assignment ||
-      !age_group ||
-      !region_type ||
-      !gender ||
-      !political_orientation ||
-      !decision_style
-    ) {
-      return NextResponse.json(
-        { error: 'Fehlende Pflichtfelder.' },
-        { status: 400 }
-      );
+    // Validation
+    if (!group_assignment || !age_group || !gender || !political_orientation || !decision_style) {
+      return NextResponse.json({ error: 'Fehlende Pflichtfelder.' }, { status: 400 });
     }
-
-    if (typeof age_group !== 'string' || !VALID_AGE_GROUPS.includes(age_group)) {
-      return NextResponse.json(
-        { error: 'Ungültige Altersgruppe.' },
-        { status: 400 }
-      );
+    if (!VALID_AGE_GROUPS.includes(age_group)) {
+      return NextResponse.json({ error: 'Ungültige Altersgruppe.' }, { status: 400 });
+    }
+    if (!VALID_GENDERS.includes(gender)) {
+      return NextResponse.json({ error: 'Ungültiges Geschlecht.' }, { status: 400 });
+    }
+    if (!VALID_DECISION_STYLES.includes(decision_style)) {
+      return NextResponse.json({ error: 'Ungültiger Entscheidungsstil.' }, { status: 400 });
     }
 
     const supabase = getSupabaseClient();
@@ -43,7 +36,6 @@ export async function POST(request: NextRequest) {
       .insert({
         group_assignment,
         age_group,
-        region_type,
         gender,
         political_orientation,
         decision_style,
@@ -62,9 +54,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ id: data.id }, { status: 201 });
   } catch (err) {
     console.error('Unexpected error:', err);
-    return NextResponse.json(
-      { error: 'Interner Serverfehler.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Interner Serverfehler.' }, { status: 500 });
   }
 }

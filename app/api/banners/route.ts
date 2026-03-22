@@ -5,7 +5,7 @@ import type { BannerData } from '@/lib/types';
 
 const VALID_INITIATIVE_IDS = [1, 2];
 const VALID_AGE_GROUPS = ['18-29', '30-44', '45-59', '60+'];
-const VALID_DECISION_STYLES = ['rational', 'emotional'];
+const VALID_DECISION_STYLES = ['rational', 'ausgewogen', 'emotional'];
 const VALID_GROUPS = ['A', 'B'];
 
 export async function GET(request: NextRequest) {

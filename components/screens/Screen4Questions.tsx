@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import RangeSlider from '@/components/RangeSlider';
-import PillToggle from '@/components/PillToggle';
 import type { BannerData } from '@/lib/types';
 
 interface Props {
@@ -15,12 +14,6 @@ interface Props {
   onComplete: () => void;
 }
 
-const PREFERRED_OPTIONS = [
-  { value: 'A', label: 'Banner A' },
-  { value: 'B', label: 'Banner B' },
-  { value: 'none', label: 'Kein Unterschied' },
-];
-
 export default function Screen4Questions({
   initiativeId,
   participantId,
@@ -29,30 +22,14 @@ export default function Screen4Questions({
   testMode = false,
   onComplete,
 }: Props) {
-  const [votingIntention, setVotingIntention] = useState(3);
-  const [preferredBanner, setPreferredBanner] = useState<string | null>(null);
-  const [persuasivenessA, setPersuasivenessA] = useState(3);
-  const [persuasivenessB, setPersuasivenessB] = useState(3);
-  const [errors, setErrors] = useState<{ preferredBanner?: string }>({});
+  const [votingIntention, setVotingIntention] = useState(4);
+  const [credibility, setCredibility] = useState(4);
+  const [personalizationFelt, setPersonalizationFelt] = useState(4);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const validate = () => {
-    const errs: { preferredBanner?: string } = {};
-    if (!preferredBanner) {
-      errs.preferredBanner = 'Bitte wählen Sie eine Option aus.';
-    }
-    return errs;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
-    setErrors({});
     setLoading(true);
     setSubmitError(null);
 
@@ -73,9 +50,8 @@ export default function Screen4Questions({
           banner_a_type: bannerData.bannerAType,
           banner_b_type: bannerData.bannerBType,
           voting_intention: votingIntention,
-          preferred_banner: preferredBanner,
-          persuasiveness_a: persuasivenessA,
-          persuasiveness_b: persuasivenessB,
+          credibility,
+          personalization_felt: personalizationFelt,
           fallback_used: bannerData.fallbackUsed,
         }),
       });
@@ -97,62 +73,52 @@ export default function Screen4Questions({
         Vorlage {initiativeId} – Ihre Einschätzung
       </h2>
       <p className="text-[#6E6E73] mb-8">
-        Bitte beantworten Sie die folgenden Fragen zu den Bannern, die Sie gesehen
-        haben.
+        Bitte beantworten Sie die folgenden Fragen zu den Bannern, die Sie gesehen haben.
       </p>
 
       <form onSubmit={handleSubmit} noValidate>
-        {/* Q1: Voting intention */}
+        {/* Q5: Voting intention */}
         <div className="bg-white rounded-3xl p-6 shadow-sm mb-4">
           <p className="text-base font-medium text-[#1D1D1F] mb-4">
-            Wie wahrscheinlich stimmen Sie für diese Vorlage?
+            Wenn die Abstimmung zu diesem Thema morgen stattfinden würde – wie würden Sie abstimmen?
           </p>
           <RangeSlider
             value={votingIntention}
             onChange={setVotingIntention}
-            leftLabel="Sehr unwahrscheinlich"
-            rightLabel="Sehr wahrscheinlich"
+            min={1}
+            max={7}
+            leftLabel="Bestimmt Nein"
+            rightLabel="Bestimmt Ja"
           />
         </div>
 
-        {/* Q2: Preferred banner */}
+        {/* Q7: Credibility */}
         <div className="bg-white rounded-3xl p-6 shadow-sm mb-4">
           <p className="text-base font-medium text-[#1D1D1F] mb-4">
-            Welcher Banner hat Sie mehr angesprochen?
-          </p>
-          <PillToggle
-            options={PREFERRED_OPTIONS}
-            value={preferredBanner}
-            onChange={setPreferredBanner}
-          />
-          {errors.preferredBanner && (
-            <p className="mt-2 text-sm text-red-500">{errors.preferredBanner}</p>
-          )}
-        </div>
-
-        {/* Q3: Persuasiveness A */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm mb-4">
-          <p className="text-base font-medium text-[#1D1D1F] mb-4">
-            Wie überzeugend war Banner A?
+            Wie glaubwürdig empfinden Sie die Botschaft des Banners?
           </p>
           <RangeSlider
-            value={persuasivenessA}
-            onChange={setPersuasivenessA}
-            leftLabel="Gar nicht überzeugend"
-            rightLabel="Sehr überzeugend"
+            value={credibility}
+            onChange={setCredibility}
+            min={1}
+            max={7}
+            leftLabel="Überhaupt nicht glaubwürdig"
+            rightLabel="Sehr glaubwürdig"
           />
         </div>
 
-        {/* Q4: Persuasiveness B */}
+        {/* Q8: Personalization felt */}
         <div className="bg-white rounded-3xl p-6 shadow-sm mb-4">
           <p className="text-base font-medium text-[#1D1D1F] mb-4">
-            Wie überzeugend war Banner B?
+            Hatte der Banner das Gefühl, persönlich auf Sie zugeschnitten zu sein?
           </p>
           <RangeSlider
-            value={persuasivenessB}
-            onChange={setPersuasivenessB}
-            leftLabel="Gar nicht überzeugend"
-            rightLabel="Sehr überzeugend"
+            value={personalizationFelt}
+            onChange={setPersonalizationFelt}
+            min={1}
+            max={7}
+            leftLabel="Überhaupt nicht"
+            rightLabel="Sehr stark"
           />
         </div>
 

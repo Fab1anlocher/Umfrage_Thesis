@@ -32,19 +32,15 @@ export default function Screen1Intro({ onComplete }: Props) {
           </svg>
         </div>
         <h1 className="text-4xl font-semibold text-[#1D1D1F] leading-tight mb-4">
-          KI-Werbung &amp; Abstimmungen
+          Umfrage zur personalisierten Werbung
         </h1>
         <p className="text-base text-[#6E6E73] leading-relaxed max-w-md mx-auto mb-3">
-          Diese Umfrage ist Teil einer akademischen Masterarbeit an der Universität
-          und untersucht, wie KI-personalisierte Abstimmungswerbung die
-          Wahlabsichten in der Schweiz beeinflusst.
-        </p>
-        <p className="text-base text-[#6E6E73] leading-relaxed max-w-md mx-auto mb-3">
-          Ihre Teilnahme ist vollständig anonym und freiwillig. Alle Angaben
-          werden ausschliesslich für wissenschaftliche Zwecke verwendet.
+          Diese Umfrage ist Teil meiner Bachelorarbeit im Studiengang Wirtschaftsinformatik
+          an der Berner Fachhochschule. Sie befasst sich mit personalisierter Werbung
+          im politischen Kontext.
         </p>
         <p className="text-sm text-[#6E6E73] max-w-md mx-auto">
-          Dauer: ca. 5 Minuten
+          Vielen Dank für Ihre Teilnahme – sie ist anonym und dauert ca. 5 Minuten.
         </p>
       </div>
 
