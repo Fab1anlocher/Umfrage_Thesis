@@ -1,10 +1,3 @@
-export function getAgeGroup(age: number): string {
-  if (age < 30) return '18-29';
-  if (age < 45) return '30-44';
-  if (age < 60) return '45-59';
-  return '60+';
-}
-
 export function getDecisionStyleBucket(score: number): 'rational' | 'emotional' {
   return score >= 4 ? 'emotional' : 'rational';
 }

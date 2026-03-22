@@ -7,7 +7,7 @@ CREATE TABLE participants (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at            TIMESTAMPTZ DEFAULT NOW(),
   group_assignment      TEXT NOT NULL,   -- 'A' | 'B'
-  age                   INT NOT NULL,
+  age_group             TEXT NOT NULL,    -- '18-29' | '30-44' | '45-59' | '60+'
   region_type           TEXT NOT NULL,   -- 'stadt' | 'agglomeration' | 'land'
   gender                TEXT NOT NULL,
   political_orientation INT NOT NULL,    -- 1–5

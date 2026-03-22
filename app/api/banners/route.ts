@@ -7,7 +7,6 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
 
   const initiativeId = parseInt(searchParams.get('initiativeId') || '1') as 1 | 2;
-  const age = parseInt(searchParams.get('age') || '0');
   const ageGroup = searchParams.get('ageGroup') || '18-29';
   const politicalOrientation = parseInt(
     searchParams.get('politicalOrientation') || '3'
@@ -30,9 +29,6 @@ export async function GET(request: NextRequest) {
     };
     return NextResponse.json(result);
   }
-
-  // Suppress unused variable warning in production
-  void age;
 
   // Fetch personalized banner
   const supabase = getSupabaseClient();

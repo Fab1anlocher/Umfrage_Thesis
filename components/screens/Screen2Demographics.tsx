@@ -11,10 +11,17 @@ interface Props {
 }
 
 interface FormErrors {
-  age?: string;
+  ageGroup?: string;
   regionType?: string;
   gender?: string;
 }
+
+const AGE_GROUP_OPTIONS = [
+  { value: '18-29', label: '18–29' },
+  { value: '30-44', label: '30–44' },
+  { value: '45-59', label: '45–59' },
+  { value: '60+', label: '60+' },
+];
 
 const REGION_OPTIONS = [
   { value: 'stadt', label: 'Stadt' },
@@ -30,7 +37,7 @@ const GENDER_OPTIONS = [
 ];
 
 export default function Screen2Demographics({ group, onComplete }: Props) {
-  const [age, setAge] = useState('');
+  const [ageGroup, setAgeGroup] = useState<string | null>(null);
   const [regionType, setRegionType] = useState<string | null>(null);
   const [gender, setGender] = useState<string | null>(null);
   const [politicalOrientation, setPoliticalOrientation] = useState(3);
@@ -41,9 +48,8 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
 
   const validate = (): FormErrors => {
     const errs: FormErrors = {};
-    const ageNum = parseInt(age);
-    if (!age || isNaN(ageNum) || ageNum < 18 || ageNum > 120) {
-      errs.age = 'Bitte geben Sie ein gültiges Alter an (18–120).';
+    if (!ageGroup) {
+      errs.ageGroup = 'Bitte wählen Sie Ihre Altersgruppe aus.';
     }
     if (!regionType) {
       errs.regionType = 'Bitte wählen Sie Ihre Wohnregion aus.';
@@ -67,7 +73,7 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
 
     try {
       const demographics: Demographics = {
-        age: parseInt(age),
+        ageGroup: ageGroup!,
         regionType: regionType as Demographics['regionType'],
         gender: gender!,
         politicalOrientation,
@@ -79,7 +85,7 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           group_assignment: group,
-          age: demographics.age,
+          age_group: demographics.ageGroup,
           region_type: demographics.regionType,
           gender: demographics.gender,
           political_orientation: demographics.politicalOrientation,
@@ -112,30 +118,18 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
       </p>
 
       <form onSubmit={handleSubmit} noValidate>
-        {/* Alter */}
+        {/* Altersgruppe */}
         <div className="mb-7">
           <label className="block text-sm font-medium text-[#1D1D1F] mb-2">
-            Alter
+            Altersgruppe
           </label>
-          <input
-            type="number"
-            inputMode="numeric"
-            placeholder="z.B. 28"
-            value={age}
-            onChange={(e) => setAge(e.target.value)}
-            className={`
-              w-full max-w-[160px] h-[52px] px-4 rounded-2xl border text-base
-              bg-white text-[#1D1D1F] outline-none
-              transition-colors duration-150
-              ${
-                errors.age
-                  ? 'border-red-400 focus:border-red-500'
-                  : 'border-[#E8E8ED] focus:border-[#0071E3]'
-              }
-            `}
+          <PillToggle
+            options={AGE_GROUP_OPTIONS}
+            value={ageGroup}
+            onChange={(v) => setAgeGroup(v)}
           />
-          {errors.age && (
-            <p className="mt-1.5 text-sm text-red-500">{errors.age}</p>
+          {errors.ageGroup && (
+            <p className="mt-1.5 text-sm text-red-500">{errors.ageGroup}</p>
           )}
         </div>
 

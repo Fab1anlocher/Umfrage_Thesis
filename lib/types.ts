@@ -1,7 +1,7 @@
 export type GroupAssignment = 'A' | 'B';
 
 export interface Demographics {
-  age: number;
+  ageGroup: string;
   regionType: 'stadt' | 'agglomeration' | 'land';
   gender: string;
   politicalOrientation: number; // 1–5
@@ -18,7 +18,7 @@ export interface BannerData {
 
 export interface ParticipantPayload {
   group_assignment: GroupAssignment;
-  age: number;
+  age_group: string;
   region_type: string;
   gender: string;
   political_orientation: number;
