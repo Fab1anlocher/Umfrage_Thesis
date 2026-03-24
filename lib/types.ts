@@ -10,10 +10,8 @@ export interface Demographics {
 }
 
 export interface BannerData {
-  bannerAUrl: string | null;
-  bannerBUrl: string | null;
-  bannerAType: 'personalized' | 'neutral';
-  bannerBType: 'personalized' | 'neutral';
+  bannerUrl: string | null;
+  bannerType: 'personalized' | 'neutral';
   fallbackUsed: boolean;
 }
 
@@ -29,8 +27,7 @@ export interface ResponsePayload {
   participant_id: string;
   initiative_id: number;
   group_assignment: GroupAssignment;
-  banner_a_type: 'personalized' | 'neutral';
-  banner_b_type: 'personalized' | 'neutral';
+  banner_type: 'personalized' | 'neutral';
   voting_intention: number;   // 1–7
   credibility: number;        // 1–7
   personalization_felt: number; // 1–7

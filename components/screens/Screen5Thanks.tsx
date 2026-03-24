@@ -38,7 +38,7 @@ export default function Screen5Thanks() {
           <p className="text-sm text-[#6E6E73] leading-relaxed">
             <span className="font-medium text-[#1D1D1F]">Datenschutzhinweis:</span>{' '}
             Alle Ihre Angaben sind vollständig anonym und werden ausschliesslich
-            für wissenschaftliche Zwecke im Rahmen dieser Masterarbeit verwendet.
+            für wissenschaftliche Zwecke im Rahmen dieser Bachelorarbeit verwendet.
             Es werden keine personenbezogenen Daten gespeichert, die eine
             Identifizierung Ihrer Person ermöglichen.
           </p>

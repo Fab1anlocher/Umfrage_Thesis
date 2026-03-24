@@ -5,6 +5,7 @@ import type { BannerData } from '@/lib/types';
 
 const VALID_INITIATIVE_IDS = [1, 2];
 const VALID_AGE_GROUPS = ['18-29', '30-44', '45-59', '60+'];
+const VALID_GENDERS = ['männlich', 'weiblich'];
 const VALID_DECISION_STYLES = ['rational', 'ausgewogen', 'emotional'];
 const VALID_GROUPS = ['A', 'B'];
 
@@ -14,11 +15,10 @@ export async function GET(request: NextRequest) {
   // Parse and validate query parameters
   const initiativeIdRaw = parseInt(searchParams.get('initiativeId') || '');
   const ageGroup = searchParams.get('ageGroup') || '';
+  const gender = searchParams.get('gender') || '';
   const politicalOrientationRaw = parseInt(searchParams.get('politicalOrientation') || '');
   const decisionStyle = searchParams.get('decisionStyle') || '';
   const group = searchParams.get('group') || '';
-  // testMode can be signalled via URL param (e.g. when env var is not set)
-  const testModeParam = searchParams.get('testMode') === 'true';
 
   // Validate all parameters before proceeding
   if (!VALID_INITIATIVE_IDS.includes(initiativeIdRaw)) {
@@ -26,6 +26,9 @@ export async function GET(request: NextRequest) {
   }
   if (!VALID_AGE_GROUPS.includes(ageGroup)) {
     return NextResponse.json({ error: 'Ungültige ageGroup.' }, { status: 400 });
+  }
+  if (!VALID_GENDERS.includes(gender)) {
+    return NextResponse.json({ error: 'Ungültiges gender.' }, { status: 400 });
   }
   if (isNaN(politicalOrientationRaw) || politicalOrientationRaw < 1 || politicalOrientationRaw > 5) {
     return NextResponse.json({ error: 'Ungültige politicalOrientation.' }, { status: 400 });
@@ -39,36 +42,52 @@ export async function GET(request: NextRequest) {
 
   const initiativeId = initiativeIdRaw as 1 | 2;
   const politicalOrientation = politicalOrientationRaw;
-  const assignment = getBannerAssignment(group as 'A' | 'B', initiativeId);
+  const bannerType = getBannerAssignment(group as 'A' | 'B', initiativeId);
 
-  // Test mode: skip DB lookup and return placeholder data with correct types.
-  // Triggered by env var (always-on) or URL param (UI toggle).
-  const isTestMode = process.env.NEXT_PUBLIC_TEST_MODE === 'true' || testModeParam;
-  if (isTestMode) {
-    const result: BannerData = {
-      bannerAUrl: null,
-      bannerBUrl: null,
-      bannerAType: assignment.aType,
-      bannerBType: assignment.bType,
-      fallbackUsed: false,
-    };
-    return NextResponse.json(result);
+  const supabase = getSupabaseClient();
+
+  if (bannerType === 'personalized') {
+    // Fetch the matching personalised banner from the DB
+    const { data: personalizedBanner } = await supabase
+      .from('banners')
+      .select('image_url')
+      .eq('initiative_id', initiativeId)
+      .eq('type', 'personalized')
+      .eq('gender', gender)
+      .eq('age_group', ageGroup)
+      .eq('political_orientation', politicalOrientation)
+      .eq('decision_style', decisionStyle)
+      .limit(1)
+      .maybeSingle();
+
+    if (personalizedBanner?.image_url) {
+      return NextResponse.json({
+        bannerUrl: personalizedBanner.image_url,
+        bannerType: 'personalized',
+        fallbackUsed: false,
+      } satisfies BannerData);
+    }
+
+    // Fallback: no personalised banner found → show neutral instead.
+    // bannerType is set to 'neutral' (what was actually shown).
+    // fallbackUsed=true signals that personalization was intended but unavailable,
+    // so these responses can be filtered out during analysis.
+    const { data: neutralBanner } = await supabase
+      .from('banners')
+      .select('image_url')
+      .eq('initiative_id', initiativeId)
+      .eq('type', 'neutral')
+      .limit(1)
+      .maybeSingle();
+
+    return NextResponse.json({
+      bannerUrl: neutralBanner?.image_url ?? null,
+      bannerType: 'neutral',
+      fallbackUsed: true,
+    } satisfies BannerData);
   }
 
-  // Fetch the matching personalised banner from the DB
-  const supabase = getSupabaseClient();
-  const { data: personalizedBanner } = await supabase
-    .from('banners')
-    .select('image_url')
-    .eq('initiative_id', initiativeId)
-    .eq('type', 'personalized')
-    .eq('age_group', ageGroup)
-    .eq('political_orientation', politicalOrientation)
-    .eq('decision_style', decisionStyle)
-    .limit(1)
-    .maybeSingle();
-
-  // Fetch the neutral banner for this initiative
+  // Neutral banner
   const { data: neutralBanner } = await supabase
     .from('banners')
     .select('image_url')
@@ -77,31 +96,9 @@ export async function GET(request: NextRequest) {
     .limit(1)
     .maybeSingle();
 
-  const personalizedUrl: string | null = personalizedBanner?.image_url ?? null;
-  const neutralUrl: string | null = neutralBanner?.image_url ?? null;
-
-  // Fallback: if no personalised banner found, use neutral for both slots.
-  // fallbackUsed is stored in the responses table so affected entries can be
-  // excluded or weighted during analysis.
-  if (!personalizedUrl) {
-    const result: BannerData = {
-      bannerAUrl: neutralUrl,
-      bannerBUrl: neutralUrl,
-      bannerAType: assignment.aType,
-      bannerBType: assignment.bType,
-      fallbackUsed: true,
-    };
-    return NextResponse.json(result);
-  }
-
-  // Assign URLs according to the crossover design (aType / bType from getBannerAssignment)
-  const result: BannerData = {
-    bannerAUrl: assignment.aType === 'personalized' ? personalizedUrl : neutralUrl,
-    bannerBUrl: assignment.bType === 'personalized' ? personalizedUrl : neutralUrl,
-    bannerAType: assignment.aType,
-    bannerBType: assignment.bType,
+  return NextResponse.json({
+    bannerUrl: neutralBanner?.image_url ?? null,
+    bannerType: 'neutral',
     fallbackUsed: false,
-  };
-
-  return NextResponse.json(result);
+  } satisfies BannerData);
 }

@@ -8,8 +8,7 @@ export async function POST(request: NextRequest) {
       participant_id,
       initiative_id,
       group_assignment,
-      banner_a_type,
-      banner_b_type,
+      banner_type,
       voting_intention,
       credibility,
       personalization_felt,
@@ -21,8 +20,7 @@ export async function POST(request: NextRequest) {
       !participant_id ||
       !initiative_id ||
       !group_assignment ||
-      !banner_a_type ||
-      !banner_b_type ||
+      !banner_type ||
       voting_intention == null ||
       credibility == null ||
       personalization_felt == null
@@ -35,8 +33,7 @@ export async function POST(request: NextRequest) {
       participant_id,
       initiative_id,
       group_assignment,
-      banner_a_type,
-      banner_b_type,
+      banner_type,
       voting_intention,
       credibility,
       personalization_felt,

@@ -9,8 +9,6 @@ interface Props {
   participantId: string;
   group: 'A' | 'B';
   bannerData: BannerData;
-  /** TEST MODE – skip DB write when true */
-  testMode?: boolean;
   onComplete: () => void;
 }
 
@@ -19,7 +17,6 @@ export default function Screen4Questions({
   participantId,
   group,
   bannerData,
-  testMode = false,
   onComplete,
 }: Props) {
   const [votingIntention, setVotingIntention] = useState(4);
@@ -34,12 +31,6 @@ export default function Screen4Questions({
     setSubmitError(null);
 
     try {
-      // In test mode: skip DB write entirely
-      if (testMode) {
-        onComplete();
-        return;
-      }
-
       const res = await fetch('/api/responses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -47,8 +38,7 @@ export default function Screen4Questions({
           participant_id: participantId,
           initiative_id: initiativeId,
           group_assignment: group,
-          banner_a_type: bannerData.bannerAType,
-          banner_b_type: bannerData.bannerBType,
+          banner_type: bannerData.bannerType,
           voting_intention: votingIntention,
           credibility,
           personalization_felt: personalizationFelt,
@@ -73,7 +63,7 @@ export default function Screen4Questions({
         Vorlage {initiativeId} – Ihre Einschätzung
       </h2>
       <p className="text-[#6E6E73] mb-8">
-        Bitte beantworten Sie die folgenden Fragen zu den Bannern, die Sie gesehen haben.
+        Bitte beantworten Sie die folgenden Fragen zu dem Banner, den Sie gesehen haben.
       </p>
 
       <form onSubmit={handleSubmit} noValidate>

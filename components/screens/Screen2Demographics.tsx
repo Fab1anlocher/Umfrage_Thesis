@@ -7,7 +7,6 @@ import type { Demographics, DecisionStyle } from '@/lib/types';
 
 interface Props {
   group: 'A' | 'B';
-  testMode?: boolean;
   onComplete: (data: Demographics, participantId: string) => void;
 }
 
@@ -35,7 +34,7 @@ const DECISION_STYLE_OPTIONS = [
   { value: 'emotional',  label: 'Emotional' },
 ];
 
-export default function Screen2Demographics({ group, testMode = false, onComplete }: Props) {
+export default function Screen2Demographics({ group, onComplete }: Props) {
   const [ageGroup, setAgeGroup] = useState<string | null>(null);
   const [gender, setGender] = useState<'männlich' | 'weiblich' | null>(null);
   const [politicalOrientation, setPoliticalOrientation] = useState(3);
@@ -70,11 +69,6 @@ export default function Screen2Demographics({ group, testMode = false, onComplet
         politicalOrientation,
         decisionStyle: decisionStyle!,
       };
-
-      if (testMode) {
-        onComplete(demographics, 'test-' + Date.now());
-        return;
-      }
 
       const res = await fetch('/api/participants', {
         method: 'POST',

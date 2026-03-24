@@ -9,35 +9,6 @@ import Screen4Questions from '@/components/screens/Screen4Questions';
 import Screen5Thanks from '@/components/screens/Screen5Thanks';
 import type { Demographics, BannerData } from '@/lib/types';
 
-// ── TEST MODE ────────────────────────────────────────────────────────────────
-// Remove the <TestModeToggle /> usage and the testMode state below to delete
-// this feature entirely when it is no longer needed.
-function TestModeToggle({
-  active,
-  onToggle,
-}: {
-  active: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      onClick={onToggle}
-      aria-pressed={active}
-      className={`
-        fixed top-4 right-4 z-50
-        text-xs font-medium px-3 py-1.5 rounded-full border
-        transition-all duration-150 shadow-sm
-        ${active
-          ? 'bg-[#0071E3] text-white border-[#0071E3]'
-          : 'bg-white text-[#6E6E73] border-[#E8E8ED] hover:border-[#0071E3] hover:text-[#0071E3]'}
-      `}
-    >
-      Testmodus {active ? 'AN' : 'AUS'}
-    </button>
-  );
-}
-// ─────────────────────────────────────────────────────────────────────────────
-
 type Step =
   | 'intro'
   | 'demographics'
@@ -64,8 +35,6 @@ export default function SurveyPage() {
   const [demographics, setDemographics] = useState<Demographics | null>(null);
   const [bannerData1, setBannerData1] = useState<BannerData | null>(null);
   const [bannerData2, setBannerData2] = useState<BannerData | null>(null);
-  // TEST MODE – remove this line (and TestModeToggle) to delete the feature:
-  const [testMode, setTestMode] = useState(process.env.NEXT_PUBLIC_TEST_MODE === 'true');
 
   const handleIntroComplete = () => {
     const newGroup: 'A' | 'B' = Math.random() < 0.5 ? 'A' : 'B';
@@ -100,15 +69,12 @@ export default function SurveyPage() {
   return (
     <div className="min-h-screen bg-[#F5F5F7]">
       <ProgressBar progress={STEP_PROGRESS[step]} />
-      {/* TEST MODE – remove the next line to delete the feature */}
-      <TestModeToggle active={testMode} onToggle={() => setTestMode((v) => !v)} />
       <div className="max-w-2xl mx-auto px-4 pt-8 pb-16">
         {step === 'intro' && <Screen1Intro onComplete={handleIntroComplete} />}
 
         {step === 'demographics' && group && (
           <Screen2Demographics
             group={group}
-            testMode={testMode}
             onComplete={handleDemographicsComplete}
           />
         )}
@@ -118,7 +84,6 @@ export default function SurveyPage() {
             initiativeId={1}
             group={group}
             demographics={demographics}
-            testMode={testMode}
             onComplete={handleBanner1Complete}
           />
         )}
@@ -132,7 +97,6 @@ export default function SurveyPage() {
               participantId={participantId}
               group={group}
               bannerData={bannerData1}
-              testMode={testMode}
               onComplete={handleQuestions1Complete}
             />
           )}
@@ -142,7 +106,6 @@ export default function SurveyPage() {
             initiativeId={2}
             group={group}
             demographics={demographics}
-            testMode={testMode}
             onComplete={handleBanner2Complete}
           />
         )}
@@ -156,7 +119,6 @@ export default function SurveyPage() {
               participantId={participantId}
               group={group}
               bannerData={bannerData2}
-              testMode={testMode}
               onComplete={handleQuestions2Complete}
             />
           )}

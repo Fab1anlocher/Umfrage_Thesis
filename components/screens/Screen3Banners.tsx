@@ -3,14 +3,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import type { Demographics, BannerData } from '@/lib/types';
-import { getBannerAssignment } from '@/lib/utils';
 
 interface Props {
   initiativeId: 1 | 2;
   group: 'A' | 'B';
   demographics: Demographics;
-  /** TEST MODE – remove this prop (and all isTestMode usages) to delete the feature */
-  testMode?: boolean;
   onComplete: (data: BannerData) => void;
 }
 
@@ -18,25 +15,21 @@ const INITIATIVE_DESCRIPTIONS: Record<number, { title: string; description: stri
   1: {
     title: 'Vorlage 1',
     description:
-      'Volksinitiative zur Einführung eines bedingungslosen Grundeinkommens für alle in der Schweiz wohnhaften Personen.',
+      'Volksinitiative «Keine 10-Millionen-Schweiz! (Nachhaltigkeitsinitiative)»',
   },
   2: {
     title: 'Vorlage 2',
     description:
-      'Bundesgesetz über den Ausbau erneuerbarer Energien und die schrittweise Abkehr von fossilen Brennstoffen bis 2050.',
+      'Änderung des Bundesgesetzes über den zivilen Ersatzdienst (Zivildienstgesetz, ZDG)',
   },
 };
-
-const TEST_MODE = process.env.NEXT_PUBLIC_TEST_MODE === 'true';
 
 export default function Screen3Banners({
   initiativeId,
   group,
   demographics,
-  testMode,
   onComplete,
 }: Props) {
-  const isTestMode = testMode ?? TEST_MODE;
   const [bannerData, setBannerData] = useState<BannerData | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [countdown, setCountdown] = useState(3);
@@ -45,38 +38,35 @@ export default function Screen3Banners({
 
   const info = INITIATIVE_DESCRIPTIONS[initiativeId];
 
-  const fetchBanners = useCallback(async () => {
+  const fetchBanner = useCallback(async () => {
     const params = new URLSearchParams({
       initiativeId: String(initiativeId),
       ageGroup: demographics.ageGroup,
+      gender: demographics.gender,
       politicalOrientation: String(demographics.politicalOrientation),
       decisionStyle: demographics.decisionStyle,
       group,
-      // Tell the API to skip DB when UI test mode toggle is active
-      testMode: String(isTestMode),
     });
 
     try {
       const res = await fetch(`/api/banners?${params.toString()}`);
-      if (!res.ok) throw new Error('Fehler beim Laden der Banner.');
+      if (!res.ok) throw new Error('Fehler beim Laden des Banners.');
       const data: BannerData = await res.json();
       setBannerData(data);
     } catch {
       setLoadError(true);
     }
-  }, [initiativeId, group, demographics, isTestMode]);
+  }, [initiativeId, group, demographics]);
 
   useEffect(() => {
-    fetchBanners();
-  }, [fetchBanners]);
+    fetchBanner();
+  }, [fetchBanner]);
 
-  // Countdown timer – starts once banners are loaded (or test mode).
+  // Countdown timer – starts once banner is loaded.
   // Guard prevents double-start if bannerData change re-triggers the effect.
-  // In test mode we always start, even if loadError occurred (no real DB needed).
   useEffect(() => {
     if (timerStarted.current) return;
-    if (!bannerData && !isTestMode) return;
-    if (loadError && !isTestMode) return;
+    if (!bannerData) return;
 
     timerStarted.current = true;
 
@@ -92,25 +82,15 @@ export default function Screen3Banners({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [bannerData, isTestMode, loadError]);
+  }, [bannerData]);
 
   const handleContinue = () => {
     if (bannerData) {
       onComplete(bannerData);
-    } else if (isTestMode) {
-      // In test mode without real banner data, derive types from crossover design
-      const { aType, bType } = getBannerAssignment(group, initiativeId);
-      onComplete({
-        bannerAUrl: null,
-        bannerBUrl: null,
-        bannerAType: aType,
-        bannerBType: bType,
-        fallbackUsed: false,
-      });
     }
   };
 
-  const isLoading = !bannerData && !loadError && !isTestMode;
+  const isLoading = !bannerData && !loadError;
 
   return (
     <div className="screen-enter py-8">
@@ -123,7 +103,7 @@ export default function Screen3Banners({
       <p className="text-[#6E6E73] mb-8 leading-relaxed">{info.description}</p>
 
       <p className="text-sm text-[#6E6E73] mb-5">
-        Bitte schauen Sie sich beide Banner an, bevor Sie fortfahren.
+        Bitte schauen Sie sich den Banner an, bevor Sie fortfahren.
       </p>
 
       {isLoading && (
@@ -134,26 +114,30 @@ export default function Screen3Banners({
 
       {loadError && (
         <p className="text-red-500 text-sm mb-6">
-          Die Banner konnten nicht geladen werden. Bitte laden Sie die Seite neu.
+          Der Banner konnte nicht geladen werden. Bitte laden Sie die Seite neu.
         </p>
       )}
 
-      {(bannerData || isTestMode) && !loadError && (
-        <div className="flex flex-col md:flex-row gap-5 mb-8">
-          <BannerCard
-            label="Banner A"
-            url={bannerData?.bannerAUrl ?? null}
-            type={bannerData?.bannerAType ?? 'neutral'}
-            initiativeId={initiativeId}
-            isTestMode={isTestMode}
-          />
-          <BannerCard
-            label="Banner B"
-            url={bannerData?.bannerBUrl ?? null}
-            type={bannerData?.bannerBType ?? 'personalized'}
-            initiativeId={initiativeId}
-            isTestMode={isTestMode}
-          />
+      {bannerData && !loadError && (
+        <div className="mb-8">
+          <div className="rounded-3xl overflow-hidden shadow-sm border border-[#E8E8ED] bg-white">
+            {bannerData.bannerUrl ? (
+              <div className="relative w-full aspect-[16/9]">
+                <Image
+                  src={bannerData.bannerUrl}
+                  alt={info.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 672px"
+                />
+              </div>
+            ) : (
+              // Fallback: Banner konnte nicht geladen werden (kein Bild in DB).
+              <div className="flex items-center justify-center aspect-[16/9] bg-[#F5F5F7]">
+                <p className="text-sm text-[#6E6E73]">Banner nicht verfügbar.</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -174,67 +158,6 @@ export default function Screen3Banners({
           ? `Weiter (${countdown})`
           : 'Weiter ✓'}
       </button>
-    </div>
-  );
-}
-
-interface BannerCardProps {
-  label: string;
-  url: string | null;
-  type: 'personalized' | 'neutral';
-  initiativeId: number;
-  isTestMode: boolean;
-}
-
-function BannerCard({ label, url, type, initiativeId, isTestMode }: BannerCardProps) {
-  return (
-    <div className="flex-1">
-      <p className="text-sm font-medium text-[#1D1D1F] mb-2">{label}</p>
-      <div className="rounded-3xl overflow-hidden shadow-sm border border-[#E8E8ED] bg-white">
-        {isTestMode || !url ? (
-          <TestPlaceholder type={type} initiativeId={initiativeId} />
-        ) : (
-          <div className="relative w-full aspect-[16/9]">
-            <Image
-              src={url}
-              alt={label}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function TestPlaceholder({
-  type,
-  initiativeId,
-}: {
-  type: 'personalized' | 'neutral';
-  initiativeId: number;
-}) {
-  const isPersonalized = type === 'personalized';
-  return (
-    <div
-      className={`
-        flex flex-col items-center justify-center
-        min-h-[180px] p-6 text-center
-        ${isPersonalized ? 'bg-blue-50' : 'bg-gray-100'}
-      `}
-    >
-      <span className="text-3xl mb-2">{isPersonalized ? '🎯' : '⬜'}</span>
-      <p
-        className={`text-sm font-medium ${
-          isPersonalized ? 'text-blue-700' : 'text-gray-600'
-        }`}
-      >
-        {isPersonalized
-          ? `Personalisierter Banner – Vorlage ${initiativeId}`
-          : `Neutraler Banner – Vorlage ${initiativeId}`}
-      </p>
     </div>
   );
 }

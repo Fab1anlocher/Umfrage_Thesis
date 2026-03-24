@@ -1,24 +1,23 @@
 /**
- * Returns the banner type assignment for each slot (A / B) based on the
- * crossover design:
+ * Returns the banner type a participant sees for a given initiative,
+ * based on the crossover design:
  *
- *   Group A — Initiative 1: A = neutral,      B = personalized
- *   Group A — Initiative 2: A = personalized,  B = neutral
- *   Group B — Initiative 1: A = personalized,  B = neutral
- *   Group B — Initiative 2: A = neutral,       B = personalized
+ *   Group A — Initiative 1: personalized
+ *   Group A — Initiative 2: neutral
+ *   Group B — Initiative 1: neutral
+ *   Group B — Initiative 2: personalized
  *
- * This ensures every participant sees both a neutral and a personalized
- * banner, and that the order is counterbalanced across groups and initiatives.
+ * Every participant sees one banner per initiative. Across both initiatives
+ * each participant experiences both conditions (personalized + neutral),
+ * counterbalanced between groups.
  */
 export function getBannerAssignment(
   group: 'A' | 'B',
   initiativeId: 1 | 2
-): { aType: 'personalized' | 'neutral'; bType: 'personalized' | 'neutral' } {
+): 'personalized' | 'neutral' {
   if (group === 'A') {
-    if (initiativeId === 1) return { aType: 'neutral', bType: 'personalized' };
-    return { aType: 'personalized', bType: 'neutral' };
+    return initiativeId === 1 ? 'personalized' : 'neutral';
   } else {
-    if (initiativeId === 1) return { aType: 'personalized', bType: 'neutral' };
-    return { aType: 'neutral', bType: 'personalized' };
+    return initiativeId === 1 ? 'neutral' : 'personalized';
   }
 }
