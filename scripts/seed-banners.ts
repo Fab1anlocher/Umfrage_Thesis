@@ -64,16 +64,54 @@ const DECISION_STYLES:        DecisionStyle[]        = ['rational', 'ausgewogen'
 
 // ── Prompt-Generierung via Gemini 2.5 Pro + PDF ───────────────────────────────
 
+// Hält entweder einen Context Cache (für grosse PDFs) oder die direkte File-URI (Fallback).
+type PdfContext =
+  | { kind: 'cache'; name: string }
+  | { kind: 'uri';   uri: string  };
+
 /**
- * Stufe 1: Gemini 2.5 Pro liest das Argumentarium und erstellt einen
- * vollständigen Bildprompt für Gemini 3 Pro Image.
- *
- * Die KI erhält die Rohdaten der Zielgruppe und interpretiert selbst,
- * welche Argumente passen und wie diese visuell umgesetzt werden sollen.
- * Das PDF verhindert, dass die KI Argumente halluziniert.
+ * Versucht einen Context Cache für das PDF zu erstellen (spart ~75% Input-Tokens).
+ * Fällt auf direkte URI zurück wenn das PDF zu klein ist (< 2048 Tokens).
+ */
+async function buildPdfContext(fileUri: string, displayName: string): Promise<PdfContext> {
+  try {
+    console.log(`🗄   Erstelle Context Cache: ${displayName}`);
+    const cache = await genai.caches.create({
+      model: 'gemini-2.5-flash',
+      config: {
+        contents: [{ role: 'user', parts: [
+          { fileData: { fileUri, mimeType: 'application/pdf' } },
+        ]}],
+        ttl: '7200s',
+        displayName,
+      },
+    });
+    console.log(`✓  Cache erstellt → ${cache.name}\n`);
+    return { kind: 'cache', name: cache.name! };
+  } catch {
+    console.log(`ℹ   PDF zu klein für Cache – verwende direkte URI\n`);
+    return { kind: 'uri', uri: fileUri };
+  }
+}
+
+/** Baut den generateContent-Aufruf je nach PdfContext (Cache oder direkte URI). */
+async function callGeminiText(ctx: PdfContext, textPrompt: string, label: string): Promise<string> {
+  const response = await withRetry(
+    () => genai.models.generateContent(
+      ctx.kind === 'cache'
+        ? { model: 'gemini-2.5-flash', config: { cachedContent: ctx.name }, contents: [{ role: 'user', parts: [{ text: textPrompt }] }] }
+        : { model: 'gemini-2.5-flash', contents: [{ role: 'user', parts: [{ fileData: { fileUri: ctx.uri, mimeType: 'application/pdf' } }, { text: textPrompt }] }] },
+    ),
+    label,
+  );
+  return response.text?.trim() ?? '';
+}
+
+/**
+ * Stufe 1: Gemini 2.5 Pro erstellt einen Bildprompt für die Zielgruppe.
  */
 async function buildPersonalizedImagePrompt(
-  fileUri: string,
+  ctx: PdfContext,
   initiativeId: InitiativeId,
   gender: Gender,
   ageGroup: AgeGroup,
@@ -86,41 +124,14 @@ async function buildPersonalizedImagePrompt(
     .replace('{orientierung}', String(pol))
     .replace('{stil}', decisionStyle);
 
-  const response = await withRetry(
-    () => genai.models.generateContent({
-      model: 'gemini-2.5-pro',
-      contents: [{ role: 'user', parts: [
-        { fileData: { fileUri, mimeType: 'application/pdf' } },
-        { text: prompt },
-      ]}],
-    }),
-    `personalized-prompt-${initiativeId}`,
-  );
-
-  return response.text?.trim() ?? '';
+  return callGeminiText(ctx, prompt, `personalized-prompt-${initiativeId}`);
 }
 
 /**
- * Stufe 1 (neutral): Gemini 2.5 Pro liest das Argumentarium und erstellt einen
- * Bildprompt ohne Zielgruppen-Bezug. Gleiche Pipeline wie personalisiert,
- * aber ohne PROFIL-Daten – dient als Kontrollbedingung im Crossover-Design.
+ * Stufe 1 (neutral): Bildprompt ohne Zielgruppen-Bezug.
  */
-async function buildNeutralImagePrompt(
-  fileUri: string,
-  initiativeId: InitiativeId,
-): Promise<string> {
-  const response = await withRetry(
-    () => genai.models.generateContent({
-      model: 'gemini-2.5-pro',
-      contents: [{ role: 'user', parts: [
-        { fileData: { fileUri, mimeType: 'application/pdf' } },
-        { text: NEUTRAL_PROMPTS[initiativeId] },
-      ]}],
-    }),
-    `neutral-prompt-${initiativeId}`,
-  );
-
-  return response.text?.trim() ?? '';
+async function buildNeutralImagePrompt(ctx: PdfContext, initiativeId: InitiativeId): Promise<string> {
+  return callGeminiText(ctx, NEUTRAL_PROMPTS[initiativeId], `neutral-prompt-${initiativeId}`);
 }
 
 // ── Umgebungsvariablen ─────────────────────────────────────────────────────────
@@ -187,7 +198,7 @@ async function uploadPdf(pdfPath: string, displayName: string): Promise<string> 
 
 // ── Rate-Limit-Schutz ─────────────────────────────────────────────────────────
 
-const DELAY_BETWEEN_BANNERS_MS = 3_000; // Pause zwischen Bannern (3 Sekunden)
+const DELAY_BETWEEN_BANNERS_MS = 10_000; // Pause zwischen Bannern (10 Sekunden)
 const MAX_RETRIES               = 5;     // Max. Wiederholungen bei Rate-Limit-Fehler
 const RETRY_BASE_DELAY_MS       = 10_000; // Startverzögerung für Retry (10 Sekunden, verdoppelt sich)
 
@@ -205,7 +216,14 @@ async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
       return await fn();
     } catch (err) {
       const isRateLimit = err instanceof Error &&
-        (err.message.includes('429') || err.message.toLowerCase().includes('rate'));
+        (err.message.includes('429') || err.message.includes('503') ||
+         err.message.toLowerCase().includes('rate') || err.message.toLowerCase().includes('unavailable'));
+
+      // Tägliches Limit erschöpft → sofort werfen (kein Retry, kein Warten)
+      const isDailyLimit = err instanceof Error &&
+        (err.message.includes('per_day') || err.message.includes('per day') ||
+         err.message.match(/retry in \d+h/i) !== null);
+      if (isDailyLimit) throw err;
 
       if (!isRateLimit || attempt === MAX_RETRIES) throw err;
 
@@ -225,19 +243,35 @@ async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
  * Gibt die öffentliche URL zurück.
  */
 async function generateAndUpload(imagePrompt: string, storagePath: string): Promise<string> {
-  const response = await withRetry(
-    () => genai.models.generateImages({
-      model:  'gemini-3-pro-image-preview',
-      prompt: imagePrompt,
-      config: { numberOfImages: 1, aspectRatio: '16:9' },
+  // gemini-3-pro-image-preview liefert Bilder via generateContentStream als inlineData
+  const stream = await withRetry(
+    () => genai.models.generateContentStream({
+      model: 'gemini-3-pro-image-preview',
+      config: {
+        responseModalities: ['IMAGE', 'TEXT'],
+        imageConfig: { aspectRatio: '16:9' },
+      },
+      contents: [{ role: 'user', parts: [{ text: imagePrompt }] }],
     }),
     storagePath,
   );
 
-  const imageBytes = response.generatedImages?.[0]?.image?.imageBytes;
-  if (!imageBytes) throw new Error('Gemini hat kein Bild zurückgegeben.');
+  let imageBase64: string | null = null;
+  for await (const chunk of stream) {
+    const parts = chunk.candidates?.[0]?.content?.parts ?? [];
+    for (const part of parts) {
+      if (part.inlineData?.data) {
+        imageBase64 = part.inlineData.data;
+        break;
+      }
+      // Debug: log text responses to understand model behaviour
+      if (part.text) console.log('  [debug] Gemini text:', part.text.slice(0, 200));
+    }
+    if (imageBase64) break;
+  }
 
-  const imageBuffer = Buffer.from(imageBytes, 'base64');
+  if (!imageBase64) throw new Error('Gemini hat kein Bild zurückgegeben.');
+  const imageBuffer = Buffer.from(imageBase64, 'base64');
 
   const { error } = await supabase.storage
     .from('banners')
@@ -266,6 +300,12 @@ async function main(): Promise<void> {
     2: await uploadPdf(PDF_PATHS[2], 'Argumentarium Initiative 2'),
   };
 
+  // PDF-Inhalte cachen → alle Calls referenzieren nur den Cache (spart ~75% Input-Tokens)
+  const pdfContexts: Record<1 | 2, PdfContext> = {
+    1: await buildPdfContext(pdfUris[1], 'Cache Initiative 1'),
+    2: await buildPdfContext(pdfUris[2], 'Cache Initiative 2'),
+  };
+
   // Supabase Storage Bucket sicherstellen
   const { data: buckets } = await supabase.storage.listBuckets();
   if (!buckets?.some((b) => b.name === 'banners')) {
@@ -278,10 +318,11 @@ async function main(): Promise<void> {
     console.log('✓  Bucket "banners" erstellt\n');
   }
 
-  // Alle bestehenden Banner-Einträge löschen
-  // (Supabase erfordert eine WHERE-Bedingung → Trick mit nicht-existierender UUID)
-  await supabase.from('banners').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  console.log('✓  Tabelle "banners" geleert\n');
+  // Bereits vorhandene Banner zählen (werden übersprungen)
+  const { count: existingCount } = await supabase.from('banners').select('*', { count: 'exact', head: true });
+  if (existingCount && existingCount > 0) {
+    console.log(`ℹ   ${existingCount} bestehende Banner gefunden – werden übersprungen\n`);
+  }
 
   const totalPersonalized = INITIATIVES.length * GENDERS.length * AGE_GROUPS.length * POLITICAL_ORIENTATIONS.length * DECISION_STYLES.length;
   const totalNeutral      = INITIATIVES.length;
@@ -293,13 +334,30 @@ async function main(): Promise<void> {
   let done = 0;
   const errors: string[] = [];
 
-  // ── 1. Neutrale Banner (PDF via Gemini 2.5 Pro, ohne Zielgruppen-Bezug) ──────
+  // ── 1. Neutrale Banner ────────────────────────────────────────────────────────
   for (const initiativeId of INITIATIVES) {
     const label = `Neutral · Vorlage ${initiativeId}`;
     try {
-      const imagePrompt = await buildNeutralImagePrompt(pdfUris[initiativeId], initiativeId);
-      const path        = `initiative-${initiativeId}/neutral.png`;
-      const url         = await generateAndUpload(imagePrompt, path);
+      // 1. DB prüfen
+      const { data: existing } = await supabase.from('banners')
+        .select('id').eq('initiative_id', initiativeId).eq('type', 'neutral').maybeSingle();
+      if (existing) { done++; console.log(`[${done}/${total}] ⏭   ${label} (bereits vorhanden)`); await sleep(DELAY_BETWEEN_BANNERS_MS); continue; }
+
+      // 2. Storage prüfen → ♻️ DB-Eintrag erstellen ohne neu zu generieren
+      const storagePath = `initiative-${initiativeId}/neutral.png`;
+      const { data: storageFiles } = await supabase.storage.from('banners').list(`initiative-${initiativeId}`, { search: 'neutral.png' });
+      if (storageFiles && storageFiles.length > 0) {
+        const { data: urlData } = supabase.storage.from('banners').getPublicUrl(storagePath);
+        await supabase.from('banners').insert({ initiative_id: initiativeId, type: 'neutral', age_group: null, political_orientation: null, decision_style: null, image_url: urlData.publicUrl });
+        done++;
+        console.log(`[${done}/${total}] ♻️   ${label} (Storage → DB)`);
+        await sleep(DELAY_BETWEEN_BANNERS_MS);
+        continue;
+      }
+
+      // 3. Neu generieren
+      const imagePrompt = await buildNeutralImagePrompt(pdfContexts[initiativeId], initiativeId);
+      const url         = await generateAndUpload(imagePrompt, storagePath);
 
       const { error } = await supabase.from('banners').insert({
         initiative_id:         initiativeId,
@@ -329,8 +387,31 @@ async function main(): Promise<void> {
           for (const decisionStyle of DECISION_STYLES) {
             const label = `Vorlage ${initiativeId} · ${gender} · ${ageGroup} · pol${pol} · ${decisionStyle}`;
             try {
-              const imagePrompt = await buildPersonalizedImagePrompt(pdfUris[initiativeId], initiativeId, gender, ageGroup, pol, decisionStyle);
-              const path        = `initiative-${initiativeId}/personalized/${gender}_${ageGroup}_pol${pol}_${decisionStyle}.png`;
+              // 1. DB prüfen
+              const { data: existingDb } = await supabase.from('banners').select('id')
+                .eq('initiative_id', initiativeId).eq('type', 'personalized')
+                .eq('gender', gender).eq('age_group', ageGroup)
+                .eq('political_orientation', pol).eq('decision_style', decisionStyle)
+                .maybeSingle();
+              if (existingDb) { done++; console.log(`[${done}/${total}] ⏭   ${label} (bereits vorhanden)`); await sleep(DELAY_BETWEEN_BANNERS_MS); continue; }
+
+              // 2. Storage prüfen – Bild vorhanden aber DB-Eintrag fehlt → nur DB-Eintrag erstellen
+              const safeGenderCheck = gender === 'männlich' ? 'maennlich' : 'weiblich';
+              const storagePathCheck = `initiative-${initiativeId}/personalized/${safeGenderCheck}_${ageGroup}_pol${pol}_${decisionStyle}.png`;
+              const { data: storageFiles } = await supabase.storage.from('banners')
+                .list(`initiative-${initiativeId}/personalized`, { search: `${safeGenderCheck}_${ageGroup}_pol${pol}_${decisionStyle}.png` });
+              if (storageFiles && storageFiles.length > 0) {
+                const { data: urlData } = supabase.storage.from('banners').getPublicUrl(storagePathCheck);
+                await supabase.from('banners').insert({ initiative_id: initiativeId, type: 'personalized', gender, age_group: ageGroup, political_orientation: pol, decision_style: decisionStyle, image_url: urlData.publicUrl });
+                done++;
+                console.log(`[${done}/${total}] ♻️   ${label} (Storage → DB)`);
+                await sleep(DELAY_BETWEEN_BANNERS_MS);
+                continue;
+              }
+
+              const imagePrompt = await buildPersonalizedImagePrompt(pdfContexts[initiativeId], initiativeId, gender, ageGroup, pol, decisionStyle);
+              const safeGender  = gender === 'männlich' ? 'maennlich' : 'weiblich';
+              const path        = `initiative-${initiativeId}/personalized/${safeGender}_${ageGroup}_pol${pol}_${decisionStyle}.png`;
               const url         = await generateAndUpload(imagePrompt, path);
 
               const { error } = await supabase.from('banners').insert({
