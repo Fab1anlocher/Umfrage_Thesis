@@ -25,9 +25,9 @@ Du erhältst Profildaten einer Person und ein Argumentarium.
 Erstelle einen Bildgenerierungs-Prompt für einen politischen Werbebanner welcher überzeugen soll.
 für die JA-Kampagne zur Volksinitiative «Keine 10-Millionen-Schweiz! (Nachhaltigkeitsinitiative)».
 
-Der Banner soll als Instagram-Post (16:9 Format) einsatzbereit sein.
-Passe Slogan, Bildsprache, Farbwelt und Komposition eigenständig an das Profil an – jede Profildimension (Geschlecht, Altersgruppe, politische Orientierung, Entscheidungsstil) soll das visuelle Gesamtkonzept spürbar beeinflussen, sodass unterschiedliche Profile zu klar erkennbar verschiedenen Bannern führen.
-Nutze das beigefügte Argumentarium als einzige Quelle für politische Argumente.
+Der politische Banner soll als Instagram-Post (16:9 Format) einsatzbereit sein.
+Passe Slogan, Bildsprache, Farbwelt und Komposition eigenständig an das Profil an – jede Profildimension (Geschlecht, Altersgruppe, politische Orientierung, Entscheidungsstil) soll das visuelle Gesamtkonzept  beeinflussen, sodass unterschiedliche Profile zu klar erkennbar verschiedenen Bannern führen und die Werbung effektiv wirkt .
+Nutze das beigefügte Argumentarium als einzige Quelle – wähle 1–2 konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
 
 PROFIL:
 - Geschlecht: {geschlecht}
@@ -46,9 +46,9 @@ Du erhältst Profildaten einer Person und ein Argumentarium.
 Erstelle einen Bildgenerierungs-Prompt für einen politischen Werbebanner welcher überzeugen soll.
 für die NEIN-Kampagne zur Änderung des Bundesgesetzes über den zivilen Ersatzdienst (ZDG).
 
-Der Banner soll als Instagram-Post (16:9 Format) einsatzbereit sein.
-Passe Slogan, Bildsprache, Farbwelt und Komposition eigenständig an das Profil an – jede Profildimension (Geschlecht, Altersgruppe, politische Orientierung, Entscheidungsstil) soll das visuelle Gesamtkonzept spürbar beeinflussen, sodass unterschiedliche Profile zu klar erkennbar verschiedenen Bannern führen.
-Nutze das beigefügte Argumentarium als einzige Quelle für politische Argumente.
+Der politische Banner soll als Instagram-Post (16:9 Format) einsatzbereit sein.
+Passe Slogan, Bildsprache, Farbwelt und Komposition eigenständig an das Profil an – jede Profildimension (Geschlecht, Altersgruppe, politische Orientierung, Entscheidungsstil) soll das visuelle Gesamtkonzept  beeinflussen, sodass unterschiedliche Profile zu klar erkennbar verschiedenen Bannern führen und die Werbung effektiv wirkt .
+Nutze das beigefügte Argumentarium als einzige Quelle – wähle 1–2 konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
 
 PROFIL:
 - Geschlecht: {geschlecht}
@@ -76,7 +76,7 @@ Erstelle einen Bildgenerierungs-Prompt für einen politischen Werbebanner
 für die JA-Kampagne zur Volksinitiative «Keine 10-Millionen-Schweiz! (Nachhaltigkeitsinitiative)».
 
 Der Banner soll als Instagram-Post (16:9 Format) einsatzbereit sein, allgemein ansprechend, ohne spezifische Zielgruppe.
-Nutze das beigefügte Argumentarium als einzige Quelle für politische Argumente.
+Nutze das beigefügte Argumentarium als einzige Quelle – wähle 1–2 konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
 
 Gib NUR den Bildgenerierungs-Prompt zurück – ein einziger Absatz auf Deutsch, max. 200 Wörter.
 Keine Erklärungen, keine Überschriften, keine Aufzählungen. Nur der Prompt.
@@ -89,7 +89,7 @@ Erstelle einen Bildgenerierungs-Prompt für einen politischen Werbebanner
 für die NEIN-Kampagne zur Änderung des Bundesgesetzes über den zivilen Ersatzdienst (Zivildienstgesetz, ZDG).
 
 Der Banner soll als Instagram-Post (16:9 Format) einsatzbereit sein, allgemein ansprechend, ohne spezifische Zielgruppe.
-Nutze das beigefügte Argumentarium als einzige Quelle für politische Argumente.
+Nutze das beigefügte Argumentarium als einzige Quelle – wähle 1–2 konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
 
 Gib NUR den Bildgenerierungs-Prompt zurück – ein einziger Absatz auf Deutsch, max. 200 Wörter.
 Keine Erklärungen, keine Überschriften, keine Aufzählungen. Nur der Prompt.
