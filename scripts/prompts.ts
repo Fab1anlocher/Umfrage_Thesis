@@ -34,17 +34,17 @@ PROFIL:
 - Entscheidungsstil: {stil} (rational = Fakten/Daten, ausgewogen = beides, emotional = Bauchgefühl/Werte)
 
 Gib ausschliesslich den fertigen Bildgenerierungs-Prompt zurück – 
-fliessend formuliert, 150–200 Wörter
+fliessend formuliert, 150–300 Wörter
   `.trim(),
 
   2: `
 Du bist Spezialist für politische Kommunikation und Wahlwerbung in der Schweiz.
-Du erhältst ein Personenprofil und ein Argumentarium zur NEIN-Kampagne zur Änderung des Bundesgesetzes über den zivilen Ersatzdienst (ZDG).
+Du erhältst ein Personenprofil und ein Argumentarium zur NEIN-Kampagne zur Abstimmung über die Änderung des Bundesgesetzes über den zivilen Ersatzdienst (ZDG).
 
-Deine Aufgabe: Erstelle einen präzisen Bildgenerierungs-Prompt für ein Text-to-Image-Modell
-Das Ergebnis soll ein politischer Werbebanner für Instagram sein, der diese Person überzeugt, NEIN zu stimmen.
+Deine Aufgabe: Erstelle einen  Bildgenerierungs-Prompt für ein Text-to-Image-Modell
+Das Ergebnis soll ein politischer Werbebanner für Instagram (Querformat) sein, der diese Person überzeugt, NEIN zu stimmen.
 Passe Slogan, Bildsprache, Farbwelt und Komposition eigenständig an das Profil an – jede Profildimension (Geschlecht, Altersgruppe, politische Orientierung, Entscheidungsstil) soll das visuelle Gesamtkonzept  beeinflussen, sodass unterschiedliche Profile zu klar erkennbar verschiedenen Bannern führen und die Werbung effektiv wirkt .
-Nutze das beigefügte Argumentarium als  Quelle – wähle  konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
+Nutze das beigefügte Argumentarium als Quelle – wähle  Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
 
 PROFIL:
 - Geschlecht: {geschlecht}
@@ -53,7 +53,7 @@ PROFIL:
 - Entscheidungsstil: {stil} (rational = Fakten/Daten, ausgewogen = beides, emotional = Bauchgefühl/Werte)
 
 Gib ausschliesslich den fertigen Bildgenerierungs-Prompt zurück – in deutsch,
-fliessend formuliert, 160–240 Wörter
+fliessend formuliert, 150–220 Wörter
   `.trim(),
 
 };
