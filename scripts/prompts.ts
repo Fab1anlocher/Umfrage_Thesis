@@ -52,8 +52,8 @@ PROFIL:
 - Politische Orientierung: {orientierung} (Skala: 1 = links, 5 = rechts)
 - Entscheidungsstil: {stil} (rational = Fakten/Daten, ausgewogen = beides, emotional = Bauchgefühl/Werte)
 
-Gib ausschliesslich den fertigen Bildgenerierungs-Prompt zurück –
-fliessend formuliert, 150–250 Wörter
+Gib ausschliesslich den fertigen Bildgenerierungs-Prompt zurück – in deutsch,
+fliessend formuliert, 160–240 Wörter
   `.trim(),
 
 };
