@@ -341,7 +341,7 @@ async function main(): Promise<void> {
       // 1. DB prüfen
       const { data: existing } = await supabase.from('banners')
         .select('id').eq('initiative_id', initiativeId).eq('type', 'neutral').maybeSingle();
-      if (existing) { done++; console.log(`[${done}/${total}] ⏭   ${label} (bereits vorhanden)`); await sleep(DELAY_BETWEEN_BANNERS_MS); continue; }
+      if (existing) { done++; console.log(`[${done}/${total}] ⏭   ${label} (bereits vorhanden)`); continue; }
 
       // 2. Storage prüfen → ♻️ DB-Eintrag erstellen ohne neu zu generieren
       const storagePath = `initiative-${initiativeId}/neutral.png`;
@@ -351,7 +351,6 @@ async function main(): Promise<void> {
         await supabase.from('banners').insert({ initiative_id: initiativeId, type: 'neutral', age_group: null, political_orientation: null, decision_style: null, image_url: urlData.publicUrl });
         done++;
         console.log(`[${done}/${total}] ♻️   ${label} (Storage → DB)`);
-        await sleep(DELAY_BETWEEN_BANNERS_MS);
         continue;
       }
 
@@ -393,7 +392,7 @@ async function main(): Promise<void> {
                 .eq('gender', gender).eq('age_group', ageGroup)
                 .eq('political_orientation', pol).eq('decision_style', decisionStyle)
                 .maybeSingle();
-              if (existingDb) { done++; console.log(`[${done}/${total}] ⏭   ${label} (bereits vorhanden)`); await sleep(DELAY_BETWEEN_BANNERS_MS); continue; }
+              if (existingDb) { done++; console.log(`[${done}/${total}] ⏭   ${label} (bereits vorhanden)`); continue; }
 
               // 2. Storage prüfen – Bild vorhanden aber DB-Eintrag fehlt → nur DB-Eintrag erstellen
               const safeGenderCheck = gender === 'männlich' ? 'maennlich' : 'weiblich';
@@ -405,7 +404,6 @@ async function main(): Promise<void> {
                 await supabase.from('banners').insert({ initiative_id: initiativeId, type: 'personalized', gender, age_group: ageGroup, political_orientation: pol, decision_style: decisionStyle, image_url: urlData.publicUrl });
                 done++;
                 console.log(`[${done}/${total}] ♻️   ${label} (Storage → DB)`);
-                await sleep(DELAY_BETWEEN_BANNERS_MS);
                 continue;
               }
 

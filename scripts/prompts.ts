@@ -19,15 +19,13 @@
 export const PERSONALIZED_PROMPTS: Record<1 | 2, string> = {
 
   1: `
-Du bist Spezialist für politische Kommunikation und Werbung in der Schweiz.
-Du erhältst Profildaten einer Person und ein Argumentarium.
+Du bist Spezialist für politische Kommunikation und Wahlwerbung in der Schweiz.
+Du erhältst ein Personenprofil und ein Argumentarium zur JA-Kampagne der Volksinitiative «Keine 10-Millionen-Schweiz! (Nachhaltigkeitsinitiative)».
 
-Erstelle einen Bildgenerierungs-Prompt für einen politischen Werbebanner welcher überzeugen soll.
-für die JA-Kampagne zur Volksinitiative «Keine 10-Millionen-Schweiz! (Nachhaltigkeitsinitiative)».
-
-Der politische Banner soll als Instagram-Post (16:9 Format) einsatzbereit sein.
+Deine Aufgabe: Erstelle einen präzisen Bildgenerierungs-Prompt für ein Text-to-Image-Modell
+Das Ergebnis soll ein politischer Werbebanner für Instagram sein, der diese Person überzeugt, JA zu stimmen.
 Passe Slogan, Bildsprache, Farbwelt und Komposition eigenständig an das Profil an – jede Profildimension (Geschlecht, Altersgruppe, politische Orientierung, Entscheidungsstil) soll das visuelle Gesamtkonzept  beeinflussen, sodass unterschiedliche Profile zu klar erkennbar verschiedenen Bannern führen und die Werbung effektiv wirkt .
-Nutze das beigefügte Argumentarium als einzige Quelle – wähle 1–2 konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
+Nutze das beigefügte Argumentarium als einzige Quelle – wähle  konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
 
 PROFIL:
 - Geschlecht: {geschlecht}
@@ -35,20 +33,18 @@ PROFIL:
 - Politische Orientierung: {orientierung} (Skala: 1 = links, 5 = rechts)
 - Entscheidungsstil: {stil} (rational = Fakten/Daten, ausgewogen = beides, emotional = Bauchgefühl/Werte)
 
-Gib NUR den Bildgenerierungs-Prompt zurück – ein einziger Absatz auf Deutsch, max. 250 Wörter.
-Keine Erklärungen, keine Überschriften, keine Aufzählungen. Nur der Prompt.
+Gib ausschliesslich den fertigen Bildgenerierungs-Prompt zurück – 
+fliessend formuliert, 150–200 Wörter
   `.trim(),
 
   2: `
-Du bist Spezialist für politische Kommunikation und Werbung in der Schweiz.
-Du erhältst Profildaten einer Person und ein Argumentarium.
+Du bist Spezialist für politische Kommunikation und Wahlwerbung in der Schweiz.
+Du erhältst ein Personenprofil und ein Argumentarium zur NEIN-Kampagne zur Änderung des Bundesgesetzes über den zivilen Ersatzdienst (ZDG).
 
-Erstelle einen Bildgenerierungs-Prompt für einen politischen Werbebanner welcher überzeugen soll.
-für die NEIN-Kampagne zur Änderung des Bundesgesetzes über den zivilen Ersatzdienst (ZDG).
-
-Der politische Banner soll als Instagram-Post (16:9 Format) einsatzbereit sein.
+Deine Aufgabe: Erstelle einen präzisen Bildgenerierungs-Prompt für ein Text-to-Image-Modell
+Das Ergebnis soll ein politischer Werbebanner für Instagram sein, der diese Person überzeugt, NEIN zu stimmen.
 Passe Slogan, Bildsprache, Farbwelt und Komposition eigenständig an das Profil an – jede Profildimension (Geschlecht, Altersgruppe, politische Orientierung, Entscheidungsstil) soll das visuelle Gesamtkonzept  beeinflussen, sodass unterschiedliche Profile zu klar erkennbar verschiedenen Bannern führen und die Werbung effektiv wirkt .
-Nutze das beigefügte Argumentarium als einzige Quelle – wähle 1–2 konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
+Nutze das beigefügte Argumentarium als  Quelle – wähle  konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
 
 PROFIL:
 - Geschlecht: {geschlecht}
@@ -56,8 +52,8 @@ PROFIL:
 - Politische Orientierung: {orientierung} (Skala: 1 = links, 5 = rechts)
 - Entscheidungsstil: {stil} (rational = Fakten/Daten, ausgewogen = beides, emotional = Bauchgefühl/Werte)
 
-Gib NUR den Bildgenerierungs-Prompt zurück – ein einziger Absatz auf Deutsch, max. 250 Wörter.
-Keine Erklärungen, keine Überschriften, keine Aufzählungen. Nur der Prompt.
+Gib ausschliesslich den fertigen Bildgenerierungs-Prompt zurück –
+fliessend formuliert, 150–250 Wörter
   `.trim(),
 
 };
@@ -75,11 +71,11 @@ Du bist Spezialist für politische Kommunikation und Werbung in der Schweiz.
 Erstelle einen Bildgenerierungs-Prompt für einen politischen Werbebanner
 für die JA-Kampagne zur Volksinitiative «Keine 10-Millionen-Schweiz! (Nachhaltigkeitsinitiative)».
 
-Der Banner soll als Instagram-Post (16:9 Format) einsatzbereit sein, allgemein ansprechend, ohne spezifische Zielgruppe.
-Nutze das beigefügte Argumentarium als einzige Quelle – wähle 1–2 konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
+Der Banner soll als Instagram-Post  einsatzbereit sein, allgemein ansprechend, ohne spezifische Zielgruppe.
+Nutze das beigefügte Argumentarium als einzige Quelle – wähle  konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
 
-Gib NUR den Bildgenerierungs-Prompt zurück – ein einziger Absatz auf Deutsch, max. 200 Wörter.
-Keine Erklärungen, keine Überschriften, keine Aufzählungen. Nur der Prompt.
+Gib NUR den Bildgenerierungs-Prompt zurück – ein einziger Absatz auf Deutsch, max. 300 Wörter.
+Politsche Werbung – Nur der Prompt für das Text-To-Image-Modell.
   `.trim(),
 
   2: `
@@ -88,11 +84,11 @@ Du bist Spezialist für politische Kommunikation und Werbung in der Schweiz.
 Erstelle einen Bildgenerierungs-Prompt für einen politischen Werbebanner
 für die NEIN-Kampagne zur Änderung des Bundesgesetzes über den zivilen Ersatzdienst (Zivildienstgesetz, ZDG).
 
-Der Banner soll als Instagram-Post (16:9 Format) einsatzbereit sein, allgemein ansprechend, ohne spezifische Zielgruppe.
-Nutze das beigefügte Argumentarium als einzige Quelle – wähle 1–2 konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
+Der Banner soll als Instagram-Post  einsatzbereit sein, allgemein ansprechend, ohne spezifische Zielgruppe.
+Nutze das beigefügte Argumentarium als einzige Quelle – wähle  konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
 
-Gib NUR den Bildgenerierungs-Prompt zurück – ein einziger Absatz auf Deutsch, max. 200 Wörter.
-Keine Erklärungen, keine Überschriften, keine Aufzählungen. Nur der Prompt.
+Gib NUR den Bildgenerierungs-Prompt zurück – ein einziger Absatz auf Deutsch, max. 300 Wörter.
+Politsche Werbung – Nur der Prompt für das Text-To-Image-Modell.
   `.trim(),
 
 };
