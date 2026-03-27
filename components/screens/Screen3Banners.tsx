@@ -94,11 +94,6 @@ export default function Screen3Banners({
 
   return (
     <div className="screen-enter py-8">
-      <div className="mb-2">
-        <span className="inline-block text-xs font-medium text-[#0071E3] bg-[#0071E3]/10 px-3 py-1 rounded-full mb-3">
-          {group === 'A' ? 'Gruppe A' : 'Gruppe B'} &middot; {info.title}
-        </span>
-      </div>
       <h2 className="text-3xl font-semibold text-[#1D1D1F] mb-2">{info.title}</h2>
       <p className="text-[#6E6E73] mb-8 leading-relaxed">{info.description}</p>
 
@@ -143,7 +138,7 @@ export default function Screen3Banners({
 
       <button
         onClick={handleContinue}
-        disabled={!ready || isLoading}
+        disabled={(!ready && !loadError) || isLoading}
         className="
           min-h-[52px] px-10 py-3.5 rounded-full
           bg-[#0071E3] text-white text-base font-medium
@@ -154,7 +149,9 @@ export default function Screen3Banners({
           disabled:hover:scale-100
         "
       >
-        {!ready && countdown > 0
+        {loadError
+          ? 'Trotzdem weiter'
+          : !ready && countdown > 0
           ? `Weiter (${countdown})`
           : 'Weiter ✓'}
       </button>

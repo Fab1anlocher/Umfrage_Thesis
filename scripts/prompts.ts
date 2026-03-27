@@ -53,7 +53,7 @@ PROFIL:
 - Entscheidungsstil: {stil} (rational = Fakten/Daten, ausgewogen = beides, emotional = Bauchgefühl/Werte)
 
 Gib ausschliesslich den fertigen Bildgenerierungs-Prompt zurück – in deutsch,
-fliessend formuliert, 150–220 Wörter
+fliessend formuliert, 150–240 Wörter
   `.trim(),
 
 };
@@ -84,11 +84,11 @@ Du bist Spezialist für politische Kommunikation und Werbung in der Schweiz.
 Erstelle einen Bildgenerierungs-Prompt für einen politischen Werbebanner
 für die NEIN-Kampagne zur Änderung des Bundesgesetzes über den zivilen Ersatzdienst (Zivildienstgesetz, ZDG).
 
-Der Banner soll als Instagram-Post  einsatzbereit sein, allgemein ansprechend, ohne spezifische Zielgruppe.
-Nutze das beigefügte Argumentarium als einzige Quelle – wähle  konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
+Der Banner soll als Instagram-Post einsatzbereit sein, allgemein ansprechend, ohne spezifische Zielgruppe.
+Nutze das beigefügte Argumentarium als einzige Quelle – wähle konkrete Argumente aus und baue sie inhaltlich ein.
 
-Gib NUR den Bildgenerierungs-Prompt zurück – ein einziger Absatz auf Deutsch, max. 300 Wörter.
-Politsche Werbung – Nur der Prompt für das Text-To-Image-Modell.
+Gib ausschliesslich den fertigen Bildgenerierungs-Prompt zurück – in deutsch,
+fliessend formuliert, 150–240 Wörter
   `.trim(),
 
 };

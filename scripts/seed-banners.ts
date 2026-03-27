@@ -341,12 +341,15 @@ async function main(): Promise<void> {
       // 1. DB prüfen
       const { data: existing } = await supabase.from('banners')
         .select('id').eq('initiative_id', initiativeId).eq('type', 'neutral').maybeSingle();
-      if (existing) { done++; console.log(`[${done}/${total}] ⏭   ${label} (bereits vorhanden)`); continue; }
 
-      // 2. Storage prüfen → ♻️ DB-Eintrag erstellen ohne neu zu generieren
       const storagePath = `initiative-${initiativeId}/neutral.png`;
       const { data: storageFiles } = await supabase.storage.from('banners').list(`initiative-${initiativeId}`, { search: 'neutral.png' });
-      if (storageFiles && storageFiles.length > 0) {
+      const storageExists = storageFiles && storageFiles.length > 0;
+
+      if (existing && storageExists) { done++; console.log(`[${done}/${total}] ⏭   ${label} (bereits vorhanden)`); continue; }
+
+      // 2. Storage vorhanden aber kein DB-Eintrag → nur DB-Eintrag erstellen
+      if (!existing && storageExists) {
         const { data: urlData } = supabase.storage.from('banners').getPublicUrl(storagePath);
         await supabase.from('banners').insert({ initiative_id: initiativeId, type: 'neutral', age_group: null, political_orientation: null, decision_style: null, image_url: urlData.publicUrl });
         done++;
@@ -354,19 +357,27 @@ async function main(): Promise<void> {
         continue;
       }
 
-      // 3. Neu generieren
+      // 3. Neu generieren (auch wenn DB-Eintrag vorhanden aber Storage fehlt)
+      if (existing && !storageExists) {
+        console.log(`[${done}/${total}] ⚠   ${label} (DB vorhanden, Storage fehlt – neu generieren)`);
+      }
       const imagePrompt = await buildNeutralImagePrompt(pdfContexts[initiativeId], initiativeId);
       const url         = await generateAndUpload(imagePrompt, storagePath);
 
-      const { error } = await supabase.from('banners').insert({
-        initiative_id:         initiativeId,
-        type:                  'neutral',
-        age_group:             null,
-        political_orientation: null,
-        decision_style:        null,
-        image_url:             url,
-      });
-      if (error) throw new Error(error.message);
+      if (existing) {
+        const { error } = await supabase.from('banners').update({ image_url: url }).eq('id', existing.id);
+        if (error) throw new Error(error.message);
+      } else {
+        const { error } = await supabase.from('banners').insert({
+          initiative_id:         initiativeId,
+          type:                  'neutral',
+          age_group:             null,
+          political_orientation: null,
+          decision_style:        null,
+          image_url:             url,
+        });
+        if (error) throw new Error(error.message);
+      }
 
       done++;
       console.log(`[${done}/${total}] ✓  ${label}`);
@@ -392,14 +403,17 @@ async function main(): Promise<void> {
                 .eq('gender', gender).eq('age_group', ageGroup)
                 .eq('political_orientation', pol).eq('decision_style', decisionStyle)
                 .maybeSingle();
-              if (existingDb) { done++; console.log(`[${done}/${total}] ⏭   ${label} (bereits vorhanden)`); continue; }
 
-              // 2. Storage prüfen – Bild vorhanden aber DB-Eintrag fehlt → nur DB-Eintrag erstellen
               const safeGenderCheck = gender === 'männlich' ? 'maennlich' : 'weiblich';
               const storagePathCheck = `initiative-${initiativeId}/personalized/${safeGenderCheck}_${ageGroup}_pol${pol}_${decisionStyle}.png`;
               const { data: storageFiles } = await supabase.storage.from('banners')
                 .list(`initiative-${initiativeId}/personalized`, { search: `${safeGenderCheck}_${ageGroup}_pol${pol}_${decisionStyle}.png` });
-              if (storageFiles && storageFiles.length > 0) {
+              const storageExistsP = storageFiles && storageFiles.length > 0;
+
+              if (existingDb && storageExistsP) { done++; console.log(`[${done}/${total}] ⏭   ${label} (bereits vorhanden)`); continue; }
+
+              // 2. Storage vorhanden aber kein DB-Eintrag → nur DB-Eintrag erstellen
+              if (!existingDb && storageExistsP) {
                 const { data: urlData } = supabase.storage.from('banners').getPublicUrl(storagePathCheck);
                 await supabase.from('banners').insert({ initiative_id: initiativeId, type: 'personalized', gender, age_group: ageGroup, political_orientation: pol, decision_style: decisionStyle, image_url: urlData.publicUrl });
                 done++;
@@ -407,21 +421,30 @@ async function main(): Promise<void> {
                 continue;
               }
 
+              // 3. Neu generieren (auch wenn DB-Eintrag vorhanden aber Storage fehlt)
+              if (existingDb && !storageExistsP) {
+                console.log(`[${done}/${total}] ⚠   ${label} (DB vorhanden, Storage fehlt – neu generieren)`);
+              }
               const imagePrompt = await buildPersonalizedImagePrompt(pdfContexts[initiativeId], initiativeId, gender, ageGroup, pol, decisionStyle);
               const safeGender  = gender === 'männlich' ? 'maennlich' : 'weiblich';
               const path        = `initiative-${initiativeId}/personalized/${safeGender}_${ageGroup}_pol${pol}_${decisionStyle}.png`;
               const url         = await generateAndUpload(imagePrompt, path);
 
-              const { error } = await supabase.from('banners').insert({
-                initiative_id:         initiativeId,
-                type:                  'personalized',
-                gender,
-                age_group:             ageGroup,
-                political_orientation: pol,
-                decision_style:        decisionStyle,
-                image_url:             url,
-              });
-              if (error) throw new Error(error.message);
+              if (existingDb) {
+                const { error } = await supabase.from('banners').update({ image_url: url }).eq('id', existingDb.id);
+                if (error) throw new Error(error.message);
+              } else {
+                const { error } = await supabase.from('banners').insert({
+                  initiative_id:         initiativeId,
+                  type:                  'personalized',
+                  gender,
+                  age_group:             ageGroup,
+                  political_orientation: pol,
+                  decision_style:        decisionStyle,
+                  image_url:             url,
+                });
+                if (error) throw new Error(error.message);
+              }
 
               done++;
               console.log(`[${done}/${total}] ✓  ${label}`);
