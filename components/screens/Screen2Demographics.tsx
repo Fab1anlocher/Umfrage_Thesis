@@ -29,9 +29,9 @@ const GENDER_OPTIONS = [
 ];
 
 const DECISION_STYLE_OPTIONS = [
-  { value: 'rational',   label: 'Rational' },
-  { value: 'ausgewogen', label: 'Ausgewogen' },
-  { value: 'emotional',  label: 'Emotional' },
+  { value: 'rational',   label: 'Fakten & Daten' },
+  { value: 'ausgewogen', label: 'Eine Kombination aus beidem' },
+  { value: 'emotional',  label: 'Bauchgefühl & Werte' },
 ];
 
 export default function Screen2Demographics({ group, onComplete }: Props) {
