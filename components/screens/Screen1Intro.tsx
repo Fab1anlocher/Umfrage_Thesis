@@ -36,8 +36,7 @@ export default function Screen1Intro({ onComplete }: Props) {
         </h1>
         <p className="text-base text-[#6E6E73] leading-relaxed max-w-md mx-auto mb-3">
           Diese Umfrage ist Teil meiner Bachelorarbeit im Studiengang Wirtschaftsinformatik
-          an der Berner Fachhochschule. Sie befasst sich mit personalisierter Werbung
-          im politischen Kontext.
+          an der Berner Fachhochschule.
         </p>
         <p className="text-sm text-[#6E6E73] max-w-md mx-auto">
           Vielen Dank für Ihre Teilnahme – sie ist anonym und dauert ca. 5 Minuten.
@@ -58,10 +57,6 @@ export default function Screen1Intro({ onComplete }: Props) {
         Zur Umfrage starten
       </button>
 
-      <p className="mt-6 text-xs text-[#6E6E73]">
-        Durch das Starten bestätigen Sie Ihre Einwilligung zur anonymen
-        Datenverarbeitung.
-      </p>
     </div>
   );
 }

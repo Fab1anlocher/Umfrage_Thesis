@@ -29,20 +29,9 @@ export default function Screen5Thanks() {
           Vielen Dank für Ihre Teilnahme
         </h1>
 
-        <p className="text-base text-[#6E6E73] leading-relaxed max-w-md mx-auto mb-4">
-          Ihre Antworten wurden erfolgreich gespeichert und tragen zur
-          wissenschaftlichen Forschung bei.
+        <p className="text-base text-[#6E6E73] leading-relaxed max-w-md mx-auto">
+          Ihre Antworten werden gespeichert.
         </p>
-
-        <div className="mt-8 max-w-md mx-auto bg-white rounded-3xl p-6 shadow-sm border border-[#E8E8ED]">
-          <p className="text-sm text-[#6E6E73] leading-relaxed">
-            <span className="font-medium text-[#1D1D1F]">Datenschutzhinweis:</span>{' '}
-            Alle Ihre Angaben sind vollständig anonym und werden ausschliesslich
-            für wissenschaftliche Zwecke im Rahmen dieser Bachelorarbeit verwendet.
-            Es werden keine personenbezogenen Daten gespeichert, die eine
-            Identifizierung Ihrer Person ermöglichen.
-          </p>
-        </div>
       </div>
     </div>
   );

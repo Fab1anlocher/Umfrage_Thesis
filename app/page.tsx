@@ -66,10 +66,15 @@ export default function SurveyPage() {
     setStep('thanks');
   };
 
+  const containerWidth =
+    step === 'questions-1' || step === 'questions-2' ? 'max-w-4xl' : 'max-w-2xl';
+  const containerPadding =
+    step === 'banner-1' || step === 'banner-2' ? 'px-0 md:px-4' : 'px-4';
+
   return (
     <div className="min-h-screen bg-[#F5F5F7]">
       <ProgressBar progress={STEP_PROGRESS[step]} />
-      <div className="max-w-2xl mx-auto px-4 pt-8 pb-16">
+      <div className={`${containerWidth} mx-auto ${containerPadding} pt-8 pb-16`}>
         {step === 'intro' && <Screen1Intro onComplete={handleIntroComplete} />}
 
         {step === 'demographics' && group && (

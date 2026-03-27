@@ -99,12 +99,9 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
 
   return (
     <div className="screen-enter py-8">
-      <h2 className="text-3xl font-semibold text-[#1D1D1F] mb-2">
+      <h2 className="text-3xl font-semibold text-[#1D1D1F] mb-8">
         Angaben zu Ihrer Person
       </h2>
-      <p className="text-[#6E6E73] mb-8">
-        Diese Angaben helfen uns, die Ergebnisse wissenschaftlich auszuwerten.
-      </p>
 
       <form onSubmit={handleSubmit} noValidate>
         {/* Altersgruppe */}
@@ -140,7 +137,7 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
         {/* Politische Orientierung */}
         <div className="mb-7">
           <label className="block text-sm font-medium text-[#1D1D1F] mb-3">
-            Politische Orientierung
+            In politischen Angelegenheiten spricht man von «links» und «rechts». Wo würden Sie Ihre Ansichten auf dieser Skala einordnen, ganz allgemein gesprochen?
           </label>
           <RangeSlider
             value={politicalOrientation}
@@ -152,14 +149,9 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
 
         {/* Entscheidungsstil */}
         <div className="mb-10">
-          <label className="block text-sm font-medium text-[#1D1D1F] mb-1">
-            Entscheidungsstil
+          <label className="block text-sm font-medium text-[#1D1D1F] mb-3">
+            Wenn ich wichtige Entscheidungen treffe, verlasse ich mich eher auf...
           </label>
-          <p className="text-xs text-[#6E6E73] mb-3 leading-relaxed">
-            <span className="font-medium text-[#1D1D1F]">Rational</span> = Fakten, Zahlen und logische Argumente. &nbsp;
-            <span className="font-medium text-[#1D1D1F]">Ausgewogen</span> = Kombination aus beidem. &nbsp;
-            <span className="font-medium text-[#1D1D1F]">Emotional</span> = Bauchgefühl und persönliche Werte.
-          </p>
           <PillToggle
             options={DECISION_STYLE_OPTIONS}
             value={decisionStyle}

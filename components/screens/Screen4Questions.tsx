@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import RangeSlider from '@/components/RangeSlider';
 import type { BannerData } from '@/lib/types';
 
@@ -66,6 +67,29 @@ export default function Screen4Questions({
         Bitte beantworten Sie die folgenden Fragen zu dem Banner, den Sie gesehen haben.
       </p>
 
+      <div className="md:grid md:grid-cols-[1fr_1fr] md:gap-8 md:items-start">
+        {/* Banner-Vorschau */}
+        {bannerData.bannerUrl && (
+          <div className="mb-8 md:mb-0 md:sticky md:top-8">
+            <p className="text-xs font-medium text-[#6E6E73] uppercase tracking-wide mb-2">
+              Gesehener Banner
+            </p>
+            <div className="rounded-2xl overflow-hidden border border-[#E8E8ED] bg-[#F5F5F7]">
+              <div className="relative w-full aspect-[16/9]">
+                <Image
+                  src={bannerData.bannerUrl}
+                  alt={`Banner Vorlage ${initiativeId}`}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Fragen */}
+        <div>
       <form onSubmit={handleSubmit} noValidate>
         {/* Q5: Voting intention */}
         <div className="bg-white rounded-3xl p-6 shadow-sm mb-4">
@@ -100,7 +124,7 @@ export default function Screen4Questions({
         {/* Q8: Personalization felt */}
         <div className="bg-white rounded-3xl p-6 shadow-sm mb-4">
           <p className="text-base font-medium text-[#1D1D1F] mb-4">
-            Hatte der Banner das Gefühl, persönlich auf Sie zugeschnitten zu sein?
+            Inwiefern hatten Sie das Gefühl, dass dieser Banner persönlich auf Sie zugeschnitten war?
           </p>
           <RangeSlider
             value={personalizationFelt}
@@ -132,6 +156,8 @@ export default function Screen4Questions({
           {loading ? 'Wird gespeichert…' : 'Weiter'}
         </button>
       </form>
+        </div>
+      </div>
     </div>
   );
 }
