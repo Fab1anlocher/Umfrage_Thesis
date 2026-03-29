@@ -138,6 +138,7 @@ export default function Screen3Banners({
                       fill
                       className="object-contain"
                       sizes="100vw"
+                      unoptimized
                     />
                   </div>
                   {/* Lupe-Overlay */}
