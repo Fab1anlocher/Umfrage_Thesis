@@ -198,9 +198,9 @@ async function uploadPdf(pdfPath: string, displayName: string): Promise<string> 
 
 // ── Rate-Limit-Schutz ─────────────────────────────────────────────────────────
 
-const DELAY_BETWEEN_BANNERS_MS = 10_000; // Pause zwischen Bannern (10 Sekunden)
-const MAX_RETRIES               = 5;     // Max. Wiederholungen bei Rate-Limit-Fehler
-const RETRY_BASE_DELAY_MS       = 10_000; // Startverzögerung für Retry (10 Sekunden, verdoppelt sich)
+const DELAY_BETWEEN_BANNERS_MS = 15_000;  // Pause zwischen Bannern (15 Sekunden)
+const MAX_RETRIES               = 3;      // Max. Wiederholungen bei Rate-Limit-Fehler
+const RETRY_BASE_DELAY_MS       = 60_000; // Startverzögerung für Retry (60 Sekunden, verdoppelt sich)
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -208,7 +208,7 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Führt eine async Funktion aus und wiederholt sie bei Rate-Limit-Fehlern (429)
- * mit exponentiell wachsender Wartezeit (10s, 20s, 40s, 80s, 160s).
+ * mit exponentiell wachsender Wartezeit (60s, 120s, 240s).
  */
 async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -243,9 +243,8 @@ async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
  * Gibt die öffentliche URL zurück.
  */
 async function generateAndUpload(imagePrompt: string, storagePath: string): Promise<string> {
-  // gemini-3-pro-image-preview liefert Bilder via generateContentStream als inlineData
-  const stream = await withRetry(
-    () => genai.models.generateContentStream({
+  const response = await withRetry(
+    () => genai.models.generateContent({
       model: 'gemini-3-pro-image-preview',
       config: {
         responseModalities: ['IMAGE', 'TEXT'],
@@ -257,17 +256,12 @@ async function generateAndUpload(imagePrompt: string, storagePath: string): Prom
   );
 
   let imageBase64: string | null = null;
-  for await (const chunk of stream) {
-    const parts = chunk.candidates?.[0]?.content?.parts ?? [];
-    for (const part of parts) {
-      if (part.inlineData?.data) {
-        imageBase64 = part.inlineData.data;
-        break;
-      }
-      // Debug: log text responses to understand model behaviour
-      if (part.text) console.log('  [debug] Gemini text:', part.text.slice(0, 200));
+  const parts = response.candidates?.[0]?.content?.parts ?? [];
+  for (const part of parts) {
+    if (part.inlineData?.data) {
+      imageBase64 = part.inlineData.data;
+      break;
     }
-    if (imageBase64) break;
   }
 
   if (!imageBase64) throw new Error('Gemini hat kein Bild zurückgegeben.');
