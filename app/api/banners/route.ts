@@ -5,7 +5,7 @@ import type { BannerData } from '@/lib/types';
 
 const VALID_INITIATIVE_IDS = [1, 2];
 const VALID_AGE_GROUPS = ['18-29', '30-44', '45-59', '60+'];
-const VALID_GENDERS = ['männlich', 'weiblich'];
+const VALID_GENDERS = ['männlich', 'weiblich', 'divers'];
 const VALID_DECISION_STYLES = ['rational', 'ausgewogen', 'emotional'];
 const VALID_GROUPS = ['A', 'B'];
 
@@ -42,9 +42,29 @@ export async function GET(request: NextRequest) {
 
   const initiativeId = initiativeIdRaw as 1 | 2;
   const politicalOrientation = politicalOrientationRaw;
-  const bannerType = getBannerAssignment(group as 'A' | 'B', initiativeId);
-
   const supabase = getSupabaseClient();
+
+  const CACHE_HEADERS = { 'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400' };
+
+  // Divers: always show neutral banner (no gender-specific images available).
+  // fallbackUsed stays false because this is intentional, not a missing banner.
+  if (gender === 'divers') {
+    const { data: neutralBanner } = await supabase
+      .from('banners')
+      .select('image_url')
+      .eq('initiative_id', initiativeId)
+      .eq('type', 'neutral')
+      .limit(1)
+      .maybeSingle();
+
+    return NextResponse.json({
+      bannerUrl: neutralBanner?.image_url ?? null,
+      bannerType: 'neutral',
+      fallbackUsed: false,
+    } satisfies BannerData, { headers: CACHE_HEADERS });
+  }
+
+  const bannerType = getBannerAssignment(group as 'A' | 'B', initiativeId);
 
   if (bannerType === 'personalized') {
     // Fetch the matching personalised banner from the DB
@@ -65,7 +85,7 @@ export async function GET(request: NextRequest) {
         bannerUrl: personalizedBanner.image_url,
         bannerType: 'personalized',
         fallbackUsed: false,
-      } satisfies BannerData);
+      } satisfies BannerData, { headers: CACHE_HEADERS });
     }
 
     // Fallback: no personalised banner found → show neutral instead.
@@ -84,7 +104,7 @@ export async function GET(request: NextRequest) {
       bannerUrl: neutralBanner?.image_url ?? null,
       bannerType: 'neutral',
       fallbackUsed: true,
-    } satisfies BannerData);
+    } satisfies BannerData, { headers: CACHE_HEADERS });
   }
 
   // Neutral banner
@@ -100,5 +120,5 @@ export async function GET(request: NextRequest) {
     bannerUrl: neutralBanner?.image_url ?? null,
     bannerType: 'neutral',
     fallbackUsed: false,
-  } satisfies BannerData);
+  } satisfies BannerData, { headers: CACHE_HEADERS });
 }

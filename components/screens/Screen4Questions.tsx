@@ -31,10 +31,14 @@ export default function Screen4Questions({
     setLoading(true);
     setSubmitError(null);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
     try {
       const res = await fetch('/api/responses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           participant_id: participantId,
           initiative_id: initiativeId,
@@ -49,11 +53,14 @@ export default function Screen4Questions({
 
       if (!res.ok) throw new Error('Fehler beim Speichern.');
       onComplete();
-    } catch {
-      setSubmitError(
-        'Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.'
-      );
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        setSubmitError('Zeitüberschreitung – bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
+      } else {
+        setSubmitError('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
+      }
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
@@ -72,7 +79,7 @@ export default function Screen4Questions({
         {bannerData.bannerUrl && (
           <div className="mb-8 md:mb-0 md:sticky md:top-8">
             <p className="text-xs font-medium text-[#6E6E73] uppercase tracking-wide mb-2">
-              Gesehener Banner
+              Angezeigter Banner
             </p>
             <div className="rounded-2xl overflow-hidden border border-[#E8E8ED] bg-[#F5F5F7]">
               <div className="relative w-full aspect-[16/9]">

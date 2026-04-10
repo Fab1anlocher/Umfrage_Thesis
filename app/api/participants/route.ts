@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 
 const VALID_AGE_GROUPS      = ['18-29', '30-44', '45-59', '60+'];
-const VALID_GENDERS         = ['männlich', 'weiblich'];
+const VALID_GENDERS         = ['männlich', 'weiblich', 'divers'];
 const VALID_DECISION_STYLES = ['rational', 'ausgewogen', 'emotional'];
 
 export async function POST(request: NextRequest) {
@@ -28,6 +28,9 @@ export async function POST(request: NextRequest) {
     }
     if (!VALID_DECISION_STYLES.includes(decision_style)) {
       return NextResponse.json({ error: 'Ungültiger Entscheidungsstil.' }, { status: 400 });
+    }
+    if (isNaN(Number(political_orientation)) || political_orientation < 1 || political_orientation > 5) {
+      return NextResponse.json({ error: 'Ungültige politische Orientierung (1–5 erwartet).' }, { status: 400 });
     }
 
     const supabase = getSupabaseClient();

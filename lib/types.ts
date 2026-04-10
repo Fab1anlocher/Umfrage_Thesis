@@ -4,7 +4,7 @@ export type DecisionStyle = 'rational' | 'ausgewogen' | 'emotional';
 
 export interface Demographics {
   ageGroup: string;
-  gender: 'männlich' | 'weiblich';
+  gender: 'männlich' | 'weiblich' | 'divers';
   politicalOrientation: number; // 1–5
   decisionStyle: DecisionStyle;
 }

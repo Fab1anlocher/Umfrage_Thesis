@@ -1,14 +1,25 @@
 'use client';
 
+import { useState } from 'react';
+
 interface Props {
   onComplete: () => void;
 }
 
 export default function Screen1Intro({ onComplete }: Props) {
+  const [started, setStarted] = useState(false);
+
+  const handleStart = () => {
+    if (started) return;
+    setStarted(true);
+    onComplete();
+  };
+
   return (
     <div className="screen-enter flex flex-col items-center text-center py-16 px-4">
       <div className="mb-8">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0071E3]/10 mb-6">
+          {/* Target/Bullseye icon – represents targeted/personalized advertising */}
           <svg
             width="32"
             height="32"
@@ -16,19 +27,9 @@ export default function Screen1Intro({ onComplete }: Props) {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path
-              d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z"
-              fill="#0071E3"
-              opacity="0.15"
-            />
-            <path
-              d="M16 10v6l4 2"
-              stroke="#0071E3"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <circle cx="16" cy="16" r="10" stroke="#0071E3" strokeWidth="2" />
+            <circle cx="16" cy="16" r="12" stroke="#0071E3" strokeWidth="2" />
+            <circle cx="16" cy="16" r="7" stroke="#0071E3" strokeWidth="2" />
+            <circle cx="16" cy="16" r="2.5" fill="#0071E3" />
           </svg>
         </div>
         <h1 className="text-4xl font-semibold text-[#1D1D1F] leading-tight mb-4">
@@ -36,15 +37,18 @@ export default function Screen1Intro({ onComplete }: Props) {
         </h1>
         <p className="text-base text-[#6E6E73] leading-relaxed max-w-md mx-auto mb-3">
           Diese Umfrage ist Teil meiner Bachelorarbeit im Studiengang Wirtschaftsinformatik
-          an der Berner Fachhochschule.
+          an der Berner Fachhochschule. Die erhobenen Daten werden{' '}
+          <span className="font-medium text-[#1D1D1F]">ausschliesslich für diese Bachelorarbeit</span>{' '}
+          verwendet.
         </p>
         <p className="text-sm text-[#6E6E73] max-w-md mx-auto">
-          Vielen Dank für Ihre Teilnahme – sie ist anonym und dauert ca. 5 Minuten.
+          Die Teilnahme ist anonym – es werden keine Angaben gespeichert, die Rückschlüsse auf Ihre Person zulassen. Die Umfrage dauert nur wenige Minuten.
         </p>
       </div>
 
       <button
-        onClick={onComplete}
+        onClick={handleStart}
+        disabled={started}
         className="
           min-h-[52px] px-10 py-3.5 rounded-full
           bg-[#0071E3] text-white text-base font-medium
@@ -54,7 +58,7 @@ export default function Screen1Intro({ onComplete }: Props) {
           shadow-sm
         "
       >
-        Zur Umfrage starten
+        Jetzt teilnehmen
       </button>
 
     </div>

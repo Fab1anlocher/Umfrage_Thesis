@@ -11,11 +11,11 @@ DROP TABLE IF EXISTS participants CASCADE;
 CREATE TABLE participants (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at            TIMESTAMPTZ DEFAULT NOW(),
-  group_assignment      TEXT NOT NULL,   -- 'A' | 'B'
-  age_group             TEXT NOT NULL,   -- '18-29' | '30-44' | '45-59' | '60+'
-  gender                TEXT NOT NULL,   -- 'männlich' | 'weiblich'
-  political_orientation INT  NOT NULL,   -- 1–5
-  decision_style        TEXT NOT NULL    -- 'rational' | 'ausgewogen' | 'emotional'
+  group_assignment      TEXT NOT NULL CHECK (group_assignment IN ('A', 'B')),
+  age_group             TEXT NOT NULL CHECK (age_group IN ('18-29', '30-44', '45-59', '60+')),
+  gender                TEXT NOT NULL CHECK (gender IN ('männlich', 'weiblich', 'divers')),
+  political_orientation INT  NOT NULL CHECK (political_orientation BETWEEN 1 AND 5),
+  decision_style        TEXT NOT NULL CHECK (decision_style IN ('rational', 'ausgewogen', 'emotional'))
 );
 
 CREATE TABLE banners (
@@ -33,13 +33,14 @@ CREATE TABLE responses (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at            TIMESTAMPTZ DEFAULT NOW(),
   participant_id        UUID NOT NULL REFERENCES participants(id),
-  initiative_id         INT  NOT NULL,   -- 1 | 2
-  group_assignment      TEXT NOT NULL,   -- 'A' | 'B' (denormalized for easier analysis)
-  banner_type           TEXT NOT NULL,   -- 'personalized' | 'neutral' (what was actually shown)
-  voting_intention      INT  NOT NULL,   -- 1–7 (1 = bestimmt Nein, 7 = bestimmt Ja)
-  credibility           INT  NOT NULL,   -- 1–7
-  personalization_felt  INT  NOT NULL,   -- 1–7
-  fallback_used         BOOLEAN DEFAULT FALSE  -- true if personalized was intended but unavailable
+  initiative_id         INT  NOT NULL CHECK (initiative_id IN (1, 2)),
+  group_assignment      TEXT NOT NULL CHECK (group_assignment IN ('A', 'B')),
+  banner_type           TEXT NOT NULL CHECK (banner_type IN ('personalized', 'neutral')),
+  voting_intention      INT  NOT NULL CHECK (voting_intention BETWEEN 1 AND 7),
+  credibility           INT  NOT NULL CHECK (credibility BETWEEN 1 AND 7),
+  personalization_felt  INT  NOT NULL CHECK (personalization_felt BETWEEN 1 AND 7),
+  fallback_used         BOOLEAN DEFAULT FALSE,
+  UNIQUE (participant_id, initiative_id)  -- one response per participant per initiative
 );
 
 -- Indexes for common query patterns

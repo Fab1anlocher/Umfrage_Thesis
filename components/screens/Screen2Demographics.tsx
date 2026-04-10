@@ -26,6 +26,7 @@ const AGE_GROUP_OPTIONS = [
 const GENDER_OPTIONS = [
   { value: 'männlich', label: 'Männlich' },
   { value: 'weiblich', label: 'Weiblich' },
+  { value: 'divers',   label: 'Divers' },
 ];
 
 const DECISION_STYLE_OPTIONS = [
@@ -36,7 +37,7 @@ const DECISION_STYLE_OPTIONS = [
 
 export default function Screen2Demographics({ group, onComplete }: Props) {
   const [ageGroup, setAgeGroup] = useState<string | null>(null);
-  const [gender, setGender] = useState<'männlich' | 'weiblich' | null>(null);
+  const [gender, setGender] = useState<'männlich' | 'weiblich' | 'divers' | null>(null);
   const [politicalOrientation, setPoliticalOrientation] = useState(3);
   const [decisionStyle, setDecisionStyle] = useState<DecisionStyle | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -62,6 +63,9 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
     setLoading(true);
     setSubmitError(null);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
     try {
       const demographics: Demographics = {
         ageGroup: ageGroup!,
@@ -73,6 +77,7 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
       const res = await fetch('/api/participants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           group_assignment: group,
           age_group: demographics.ageGroup,
@@ -88,11 +93,14 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
 
       const { id } = await res.json();
       onComplete(demographics, id);
-    } catch {
-      setSubmitError(
-        'Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.'
-      );
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        setSubmitError('Zeitüberschreitung – bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.');
+      } else {
+        setSubmitError('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
+      }
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
@@ -127,7 +135,7 @@ export default function Screen2Demographics({ group, onComplete }: Props) {
           <PillToggle
             options={GENDER_OPTIONS}
             value={gender}
-            onChange={(v) => setGender(v as 'männlich' | 'weiblich')}
+            onChange={(v) => setGender(v as 'männlich' | 'weiblich' | 'divers')}
           />
           {errors.gender && (
             <p className="mt-1.5 text-sm text-red-500">{errors.gender}</p>
