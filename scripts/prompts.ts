@@ -24,7 +24,12 @@ Du erhältst ein Personenprofil und ein Argumentarium zur JA-Kampagne der Volksi
 
 Deine Aufgabe: Erstelle einen präzisen Bildgenerierungs-Prompt für ein Text-to-Image-Modell.
 Das Ergebnis soll ein politischer Werbebanner für Social Media (Querformat) sein, der diese Person überzeugt, JA zu stimmen.
-Passe Slogan, Eyecatcher, emotionale Aufladung, Bildsprache, Farbwelt und Komposition eigenständig an das Profil an – jede Profildimension (Geschlecht, Altersgruppe, politische Orientierung, Entscheidungsstil) soll das visuelle Gesamtkonzept beeinflussen, sodass unterschiedliche Profile zu klar erkennbar verschiedenen Bannern führen und die Werbung effektiv wirkt.
+
+
+Passe Slogan, Tonalität, Typografie, Eyechatcher, emotionale Aufladung, Bildsprache, Farbwelt und Komposition 
+an das Profil an – nutze die Profildimensionen (Geschlecht, Altersgruppe, politische 
+Orientierung, Entscheidungsstil) als Orientierung und gewichte sie so, dass die 
+Kombination für diese konkrete Person maximal überzeugend wirkt. Unterschiedliche Profile sollen zu klar verschiedenen Bannern führen.
 Nutze das beigefügte Argumentarium als einzige Quelle – wähle konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
 
 PROFIL:
@@ -33,8 +38,8 @@ PROFIL:
 - Politische Orientierung: {orientierung} (Skala: 1 = links, 3 = Mitte, 5 = rechts)
 - Entscheidungsstil: {stil} (rational = Fakten/Daten, ausgewogen = beides, emotional = Bauchgefühl/Werte)
 
-Gib ausschliesslich den fertigen Bildgenerierungs-Prompt für das Text-to-Image-Modell zurück. In Deutsch, Max. 250 Wörter.
-Keine demografischen Labels oder Profilbegriffe im Prompt.
+Gib ausschliesslich den fertigen Bildgenerierungs-Prompt für das Text-to-Image-Modell zurück. Auf Deutsch, Max. 400 Wörter.
+Achte darauf das Profildaten und Seitenzahlen nicht im Bild erscheinen, sondern nur als Orientierung für die Gestaltung zu nutzen.
   `.trim(),
 
   2: `
@@ -43,7 +48,10 @@ Du erhältst ein Personenprofil und ein Argumentarium zur NEIN-Kampagne zur Abst
 
 Deine Aufgabe: Erstelle einen präzisen Bildgenerierungs-Prompt für ein Text-to-Image-Modell.
 Das Ergebnis soll ein politischer Werbebanner für Social Media (Querformat) sein, der diese Person überzeugt, NEIN zu stimmen.
-Passe Slogan, Eyecatcher, emotionale Aufladung, Bildsprache, Farbwelt und Komposition eigenständig an das Profil an – jede Profildimension (Geschlecht, Altersgruppe, politische Orientierung, Entscheidungsstil) soll das visuelle Gesamtkonzept beeinflussen, sodass unterschiedliche Profile zu klar erkennbar verschiedenen Bannern führen und die Werbung effektiv wirkt.
+
+Passe Slogan, Tonalität, Typografie, Eyechatcher, emotionale Aufladung, Bildsprache, Farbwelt und Komposition 
+an das Profil an – nutze die Profildimensionen (Geschlecht, Altersgruppe, politische Orientierung, Entscheidungsstil) als Orientierung und gewichte sie so, dass die 
+Kombination für diese konkrete Person maximal überzeugend wirkt. Unterschiedliche Profile sollen zu klar verschiedenen Bannern führen.
 Nutze das beigefügte Argumentarium als einzige Quelle – wähle konkrete Argumente die für dieses Profil am überzeugendsten wirken und baue sie inhaltlich ein.
 
 PROFIL:
@@ -52,8 +60,8 @@ PROFIL:
 - Politische Orientierung: {orientierung} (Skala: 1 = links, 3 = Mitte, 5 = rechts)
 - Entscheidungsstil: {stil} (rational = Fakten/Daten, ausgewogen = beides, emotional = Bauchgefühl/Werte)
 
-Gib ausschliesslich den fertigen Bildgenerierungs-Prompt für das Text-to-Image-Modell zurück. In Deutsch, Max. 250 Wörter.
-Keine demografischen Labels oder Profilbegriffe im Prompt.
+Gib ausschliesslich den fertigen Bildgenerierungs-Prompt für das Text-to-Image-Modell zurück. Auf Deutsch, Max. 400 Wörter.
+Achte darauf das Profildaten und Seitenzahlen nicht im Bild erscheinen, sondern nur als Orientierung für die Gestaltung zu nutzen.
   `.trim(),
 
 };
@@ -67,13 +75,18 @@ export const NEUTRAL_PROMPTS: Record<1 | 2, string> = {
 
   1: `
 Du bist Spezialist für politische Kommunikation und Wahlwerbung in der Schweiz.
-Du erhältst ein Argumentarium zur JA-Kampagne der Volksinitiative «Keine 10-Millionen-Schweiz! (Nachhaltigkeitsinitiative)».
+DDu erhältst ein Personenprofil und ein Argumentarium zur JA-Kampagne der Volksinitiative «Keine 10-Millionen-Schweiz! (Nachhaltigkeitsinitiative)».
 
 Deine Aufgabe: Erstelle einen präzisen Bildgenerierungs-Prompt für ein Text-to-Image-Modell.
-Das Ergebnis soll ein politischer Werbebanner für Social Media (Querformat) sein, der allgemein überzeugt, JA zu stimmen.
-Nutze das beigefügte Argumentarium als einzige Quelle – wähle konkrete Argumente aus und baue sie inhaltlich ein.
+Das Ergebnis soll ein politischer Werbebanner für Social Media (Querformat) sein, der eine möglichst breite Wählerschaft anspricht und zur JA-Stimme motiviert.
 
-Gib ausschliesslich den fertigen Bildgenerierungs-Prompt für das Text-to-Image-Modell zurück. In Deutsch, Max. 250 Wörter.
+Gestalte Slogan, Tonalität, Typografie, Eyechatcher, emotionale Aufladung, Bildsprache, Farbwelt und Komposition so,
+dass der Banner breit zugänglich ist – klar, emotional verständlich und politisch überzeugend für ein heterogenes Publikum.
+Nutze das beigefügte Argumentarium als einzige Quelle – wähle die Argumente, die das grösste Überzeugungspotenzial für eine breite Öffentlichkeit haben,
+und baue sie inhaltlich ein.
+npo
+Gib ausschliesslich den fertigen Bildgenerierungs-Prompt für das Text-to-Image-Modell zurück. Auf Deutsch, Max. 400 Wörter.
+Achte darauf, dass keine Metahinweise oder interne Bezeichnungen im Bild erscheinen – nur der visuelle Inhalt selbst.
   `.trim(),
 
   2: `
@@ -81,10 +94,15 @@ Du bist Spezialist für politische Kommunikation und Wahlwerbung in der Schweiz.
 Du erhältst ein Argumentarium zur NEIN-Kampagne zur Abstimmung über die Änderung des Bundesgesetzes über den zivilen Ersatzdienst (ZDG).
 
 Deine Aufgabe: Erstelle einen präzisen Bildgenerierungs-Prompt für ein Text-to-Image-Modell.
-Das Ergebnis soll ein politischer Werbebanner für Social Media (Querformat) sein, der allgemein überzeugt, NEIN zu stimmen.
-Nutze das beigefügte Argumentarium als einzige Quelle – wähle konkrete Argumente aus und baue sie inhaltlich ein.
+Das Ergebnis soll ein politischer Werbebanner für Social Media (Querformat) sein, der eine möglichst breite Wählerschaft anspricht und zur NEIN-Stimme motiviert.
 
-Gib ausschliesslich den fertigen Bildgenerierungs-Prompt für das Text-to-Image-Modell zurück. In Deutsch, Max. 250 Wörter.
+Gestalte Slogan, Tonalität, Typografie, Eyechatcher, emotionale Aufladung, Bildsprache, Farbwelt und Komposition so,
+dass der Banner breit zugänglich ist – klar, emotional verständlich und politisch überzeugend für ein heterogenes Publikum.
+Nutze das beigefügte Argumentarium als einzige Quelle – wähle die Argumente, die das grösste Überzeugungspotenzial für eine breite Öffentlichkeit haben,
+und baue sie inhaltlich ein.
+
+Gib ausschliesslich den fertigen Bildgenerierungs-Prompt für das Text-to-Image-Modell zurück. Auf Deutsch, Max. 400 Wörter.
+Achte darauf, dass keine Metahinweise oder interne Bezeichnungen im Bild erscheinen – nur der visuelle Inhalt selbst.
   `.trim(),
 
 };

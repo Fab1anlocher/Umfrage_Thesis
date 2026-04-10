@@ -77,7 +77,7 @@ async function buildPdfContext(fileUri: string, displayName: string): Promise<Pd
   try {
     console.log(`🗄   Erstelle Context Cache: ${displayName}`);
     const cache = await genai.caches.create({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview',
       config: {
         contents: [{ role: 'user', parts: [
           { fileData: { fileUri, mimeType: 'application/pdf' } },
@@ -99,8 +99,8 @@ async function callGeminiText(ctx: PdfContext, textPrompt: string, label: string
   const response = await withRetry(
     () => genai.models.generateContent(
       ctx.kind === 'cache'
-        ? { model: 'gemini-2.5-flash', config: { cachedContent: ctx.name }, contents: [{ role: 'user', parts: [{ text: textPrompt }] }] }
-        : { model: 'gemini-2.5-flash', contents: [{ role: 'user', parts: [{ fileData: { fileUri: ctx.uri, mimeType: 'application/pdf' } }, { text: textPrompt }] }] },
+        ? { model: 'gemini-3-flash-preview', config: { cachedContent: ctx.name }, contents: [{ role: 'user', parts: [{ text: textPrompt }] }] }
+        : { model: 'gemini-3-flash-preview', contents: [{ role: 'user', parts: [{ fileData: { fileUri: ctx.uri, mimeType: 'application/pdf' } }, { text: textPrompt }] }] },
     ),
     label,
   );
@@ -198,9 +198,9 @@ async function uploadPdf(pdfPath: string, displayName: string): Promise<string> 
 
 // ── Rate-Limit-Schutz ─────────────────────────────────────────────────────────
 
-const DELAY_BETWEEN_BANNERS_MS = 15_000;  // Pause zwischen Bannern (15 Sekunden)
-const MAX_RETRIES               = 3;      // Max. Wiederholungen bei Rate-Limit-Fehler
-const RETRY_BASE_DELAY_MS       = 60_000; // Startverzögerung für Retry (60 Sekunden, verdoppelt sich)
+const DELAY_BETWEEN_BANNERS_MS = 2_000;   // Pause zwischen Bannern (2 Sekunden)
+const MAX_RETRIES               = 1;      // Max. Wiederholungen bei Rate-Limit-Fehler
+const RETRY_BASE_DELAY_MS       = 5_000;  // Startverzögerung für Retry (5 Sekunden)
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));

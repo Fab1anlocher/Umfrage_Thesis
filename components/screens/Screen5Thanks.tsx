@@ -7,16 +7,15 @@ export default function Screen5Thanks() {
       <div className="mb-8">
         <div className="flex items-center justify-center w-20 h-20 rounded-full bg-[#0071E3]/10 mb-6">
           <svg
-            width="40"
-            height="40"
-            viewBox="0 0 40 40"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
           >
-            <circle cx="20" cy="20" r="18" stroke="#0071E3" strokeWidth="2" />
             <path
-              d="M12 20.5L17.5 26L28 14.5"
+              d="M5 13l4 4L19 7"
               stroke="#0071E3"
               strokeWidth="2.5"
               strokeLinecap="round"
@@ -29,8 +28,11 @@ export default function Screen5Thanks() {
           Vielen Dank für Ihre Teilnahme
         </h1>
 
-        <p className="text-base text-[#6E6E73] leading-relaxed max-w-md mx-auto">
-          Ihre Antworten werden gespeichert.
+        <p className="text-base text-[#6E6E73] leading-relaxed max-w-md mx-auto mb-2">
+          Ihre Antworten wurden gespeichert.
+        </p>
+        <p className="text-sm text-[#6E6E73] max-w-md mx-auto">
+          Sie können dieses Fenster nun schliessen.
         </p>
       </div>
     </div>
