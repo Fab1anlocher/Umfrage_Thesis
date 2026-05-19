@@ -9,6 +9,6 @@ Dieses Repository enthält die Web-Umfrage und die Ablagestruktur für die Bache
 
 ## Unterlagen
 - `unterlagen/banner/`: Exportierte Banner aus Supabase (Bildmaterial der Umfrage).
-- `unterlagen/antworten/`: Exportierte Antworten/Responses aus Supabase.
+- `unterlagen/Datenanalyse/`: Exportierte Antworten/Responses aus Supabase und Datenanalyse
+- `unterlagen/nutzwertanalyse/`: Banner die für die Modellauswahl generiert wurden
 
-Die Dateien werden separat hochgeladen.
