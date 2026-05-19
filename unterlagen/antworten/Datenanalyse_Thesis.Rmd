@@ -1,0 +1,567 @@
+---
+title: "Bachelorthesis – Datenanalyse"
+subtitle: "KI-personalisierte politische Werbebanner für Schweizer Abstimmungen"
+author: "Fabian Locher"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 5,
+  dpi = 300
+)
+```
+
+# 1 Setup
+
+## 1.1 Pakete
+
+```{r pakete}
+library(tidyverse)
+library(corrplot)
+library(knitr)
+```
+
+## 1.2 Pfade
+
+Die CSV-Dateien werden im Unterordner `data/` erwartet, die generierten PNG-Plots
+landen im Unterordner `plots/`.
+
+```{r pfade}
+daten_ordner  <- "data"
+plots_ordner  <- "plots"
+
+dir.create(plots_ordner, showWarnings = FALSE, recursive = TRUE)
+```
+
+## 1.3 Daten einlesen
+
+```{r daten_laden}
+teilnehmer_roh <- read_csv2(
+  file.path(daten_ordner, "participants.csv"),
+  col_types = cols(id = col_character())
+)
+antworten_roh <- read_csv2(
+  file.path(daten_ordner, "responses.csv"),
+  col_types = cols(participant_id = col_character(),
+                   initiative_id  = col_character())
+)
+
+cat("Anzahl Teilnehmer:", nrow(teilnehmer_roh), "\n")
+cat("Anzahl Antworten:",  nrow(antworten_roh),  "\n")
+```
+
+## 1.4 Daten aufbereiten
+
+Beim Zivildienstgesetz (`initiative_id == "2"`) wird die Wahlabsicht
+gemäss `8 - voting_intention` invertiert, damit hohe Werte über beide
+Initiativen hinweg konsistent „Zustimmung zur jeweiligen Initiative"
+bedeuten. Die rohen Werte bleiben in `voting_intention` erhalten und
+werden in den Pro-Initiative-Plots verwendet.
+
+```{r daten_aufbereiten}
+daten <- antworten_roh %>%
+  left_join(teilnehmer_roh, by = c("participant_id" = "id")) %>%
+  mutate(
+    wahlabsicht_invertiert = if_else(
+      initiative_id == "2",
+      8L - voting_intention,
+      voting_intention
+    ),
+
+    initiative = factor(
+      case_when(
+        initiative_id == "1" ~ "Nachhaltigkeitsinitiative",
+        initiative_id == "2" ~ "Zivildienstgesetz"
+      ),
+      levels = c("Nachhaltigkeitsinitiative", "Zivildienstgesetz")
+    ),
+
+    banner_typ = factor(
+      banner_type,
+      levels = c("neutral", "personalized"),
+      labels = c("Neutral", "Personalisiert")
+    ),
+
+    pol_gruppe = factor(
+      case_when(
+        political_orientation <= 2 ~ "Links (1–2)",
+        political_orientation == 3 ~ "Mitte (3)",
+        political_orientation >= 4 ~ "Rechts (4–5)"
+      ),
+      levels = c("Links (1–2)", "Mitte (3)", "Rechts (4–5)")
+    ),
+
+    alter      = factor(age_group),
+    geschlecht = factor(gender),
+
+    entscheidungsstil = factor(
+      decision_style,
+      levels = c("rational", "ausgewogen", "emotional"),
+      labels = c("Rational", "Ausgewogen", "Emotional")
+    ),
+
+    # Numerische Kodierungen für die Korrelationsmatrizen
+    geschlecht_num = case_when(
+      gender == "weiblich" ~ 0,
+      gender == "männlich" ~ 1,
+      TRUE ~ NA_real_
+    ),
+    alter_num = case_when(
+      age_group == "18-29" ~ 1,
+      age_group == "30-44" ~ 2,
+      age_group == "45-59" ~ 3,
+      age_group == "60+"   ~ 4,
+      TRUE ~ NA_real_
+    ),
+    entscheidung_num = case_when(
+      decision_style == "rational"   ~ 1,
+      decision_style == "ausgewogen" ~ 2,
+      decision_style == "emotional"  ~ 3,
+      TRUE ~ NA_real_
+    ),
+    banner_num = if_else(banner_type == "personalized", 1L, 0L)
+  )
+```
+
+## 1.5 Theme, Farben und Speicherfunktion
+
+```{r theme}
+theme_thesis <- function(base_size = 12) {
+  theme_minimal(base_size = base_size) +
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor   = element_blank(),
+      panel.grid.major.y = element_line(color = "grey92", linewidth = 0.4),
+      axis.title.x       = element_blank(),
+      axis.title.y       = element_text(margin = margin(r = 8)),
+      axis.text          = element_text(color = "grey20"),
+      legend.position    = "bottom",
+      legend.title       = element_text(face = "bold"),
+      plot.title         = element_text(face = "bold", size = base_size + 1,
+                                        margin = margin(b = 6)),
+      plot.subtitle      = element_text(color = "grey40",
+                                        margin = margin(b = 12)),
+      plot.caption       = element_text(color = "grey50", hjust = 0,
+                                        margin = margin(t = 8))
+    )
+}
+
+farben_banner <- c("Neutral" = "#3B7A8C", "Personalisiert" = "#A63D5B")
+
+farben_demo <- c(
+  "Alter"             = "#3B7A8C",
+  "Geschlecht"        = "#5A8F7B",
+  "Pol. Orientierung" = "#A63D5B",
+  "Entscheidungsstil" = "#B8975A"
+)
+
+save_plot <- function(plot, name, width = 10, height = 3.8) {
+  ggsave(
+    filename = file.path(plots_ordner, paste0(name, ".png")),
+    plot     = plot,
+    width    = width,
+    height   = height,
+    dpi      = 300,
+    bg       = "white"
+  )
+  invisible(plot)
+}
+```
+
+---
+
+# 2 Abbildung 7: Zusammensetzung der Stichprobe
+
+```{r abb_07_stichprobe, fig.width=11, fig.height=7}
+kategorial_uebersicht <- function(spaltenname, label) {
+  teilnehmer_roh %>%
+    count(.data[[spaltenname]]) %>%
+    mutate(Prozent = round(100 * n / sum(n), 1)) %>%
+    rename(Kategorie = 1, N = n) %>%
+    mutate(
+      Kategorie = as.character(Kategorie),
+      Variable  = label
+    ) %>%
+    select(Variable, Kategorie, N, Prozent)
+}
+
+demo_alle <- bind_rows(
+  kategorial_uebersicht("age_group",             "Alter"),
+  kategorial_uebersicht("gender",                "Geschlecht"),
+  kategorial_uebersicht("political_orientation", "Pol. Orientierung"),
+  kategorial_uebersicht("decision_style",        "Entscheidungsstil")
+) %>%
+  mutate(
+    Variable = factor(Variable, levels = c("Alter", "Geschlecht",
+                                           "Pol. Orientierung", "Entscheidungsstil")),
+    Kategorie = case_when(
+      Variable == "Geschlecht"        & Kategorie == "weiblich" ~ "Weiblich",
+      Variable == "Geschlecht"        & Kategorie == "männlich" ~ "Männlich",
+      Variable == "Entscheidungsstil" ~ str_to_title(Kategorie),
+      Variable == "Pol. Orientierung" & Kategorie == "1" ~ "1\nLinks",
+      Variable == "Pol. Orientierung" & Kategorie == "3" ~ "3\nMitte",
+      Variable == "Pol. Orientierung" & Kategorie == "5" ~ "5\nRechts",
+      TRUE ~ Kategorie
+    )
+  ) %>%
+  mutate(Kategorie = factor(Kategorie, levels = c(
+    "18-29", "30-44", "45-59", "60+",
+    "Weiblich", "Männlich",
+    "1\nLinks", "2", "3\nMitte", "4", "5\nRechts",
+    "Rational", "Ausgewogen", "Emotional"
+  )))
+
+p_07 <- ggplot(demo_alle, aes(x = Kategorie, y = N, fill = Variable)) +
+  geom_col(width = 0.7, show.legend = FALSE) +
+  geom_text(aes(label = paste0(N, " (", Prozent, "%)")),
+            vjust = -0.4, size = 3.2) +
+  facet_wrap(~ Variable, scales = "free_x", ncol = 2) +
+  scale_fill_manual(values = farben_demo) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.18))) +
+  labs(title = "Zusammensetzung der Stichprobe",
+       subtitle = paste0("N = ", nrow(teilnehmer_roh), " Teilnehmende"),
+       y = "Anzahl Teilnehmende") +
+  theme_thesis() +
+  theme(
+    strip.text    = element_text(face = "bold", size = 12, margin = margin(b = 6)),
+    panel.spacing = unit(1.2, "lines"),
+    axis.text.x   = element_text(size = 10)
+  )
+
+p_07
+save_plot(p_07, "abb_07_stichprobe_gesamt", width = 11, height = 7)
+```
+
+---
+
+# 3 Abbildung 8: Wirkung des Banner-Typs – Beide Initiativen (aggregiert)
+
+```{r abb_08_banner_typ_aggregiert, fig.width=9, fig.height=5.5}
+haupteffekt_data <- daten %>%
+  group_by(banner_typ) %>%
+  summarise(
+    `Wahlabsicht`                     = mean(wahlabsicht_invertiert, na.rm = TRUE),
+    `Glaubwürdigkeit`                 = mean(credibility,            na.rm = TRUE),
+    `Wahrgenommene\nPersonalisierung` = mean(personalization_felt,   na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(-banner_typ, names_to = "Variable", values_to = "Mittelwert") %>%
+  mutate(
+    Variable = factor(Variable, levels = c("Wahlabsicht",
+                                           "Glaubwürdigkeit",
+                                           "Wahrgenommene\nPersonalisierung"))
+  )
+
+p_08 <- ggplot(haupteffekt_data,
+               aes(x = Variable, y = Mittelwert, fill = banner_typ)) +
+  geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+  geom_text(aes(label = sprintf("%.2f", Mittelwert)),
+            position = position_dodge(width = 0.75),
+            vjust = -0.4, size = 3.6) +
+  scale_fill_manual(values = farben_banner, name = "Banner-Typ") +
+  scale_y_continuous(limits = c(0, 7), breaks = 1:7,
+                     expand = expansion(mult = c(0, 0.05))) +
+  labs(title = "Wirkung des Banner-Typs auf die abhängigen Variablen",
+       y = "Mittelwert (Skala 1–7)") +
+  theme_thesis()
+
+p_08
+save_plot(p_08, "abb_08_banner_typ_aggregiert", width = 9, height = 5.5)
+```
+
+---
+
+# 4 Abbildungen 9 und 10: Wirkung des Banner-Typs pro Initiative
+
+```{r abb_09_10_banner_typ_einzeln, fig.width=8, fig.height=5}
+pro_init_data <- daten %>%
+  group_by(initiative, banner_typ) %>%
+  summarise(
+    `Wahlabsicht`                     = mean(voting_intention,     na.rm = TRUE),
+    `Glaubwürdigkeit`                 = mean(credibility,          na.rm = TRUE),
+    `Wahrgenommene\nPersonalisierung` = mean(personalization_felt, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(c(-initiative, -banner_typ),
+               names_to = "Variable", values_to = "Mittelwert") %>%
+  mutate(
+    Variable = factor(Variable, levels = c("Wahlabsicht",
+                                           "Glaubwürdigkeit",
+                                           "Wahrgenommene\nPersonalisierung"))
+  )
+
+plot_banner_einzeln <- function(initiative_name, dateiname) {
+  d <- pro_init_data %>% filter(initiative == initiative_name)
+
+  p <- ggplot(d, aes(x = Variable, y = Mittelwert, fill = banner_typ)) +
+    geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+    geom_text(aes(label = sprintf("%.2f", Mittelwert)),
+              position = position_dodge(width = 0.75),
+              vjust = -0.4, size = 3.8) +
+    scale_fill_manual(values = farben_banner, name = "Banner-Typ") +
+    scale_y_continuous(limits = c(0, 7), breaks = 1:7,
+                       expand = expansion(mult = c(0, 0.05))) +
+    labs(title = paste0("Wirkung des Banner-Typs – ", initiative_name),
+         y = "Mittelwert (Skala 1–7)") +
+    theme_thesis()
+
+  print(p)
+  save_plot(p, dateiname, width = 8, height = 5)
+}
+
+plot_banner_einzeln("Nachhaltigkeitsinitiative",
+                    "abb_09_banner_typ_nachhaltigkeit")
+plot_banner_einzeln("Zivildienstgesetz",
+                    "abb_10_banner_typ_zivildienst")
+```
+
+---
+
+# 5 Abbildungen 11 und 12: Wahlabsicht nach politischer Orientierung
+
+```{r abb_11_12_pol_orientierung, fig.width=9, fig.height=5}
+pol_voting_data <- daten %>%
+  group_by(initiative, political_orientation, banner_typ) %>%
+  summarise(voting_M = mean(voting_intention, na.rm = TRUE),
+            .groups = "drop") %>%
+  mutate(pol_5 = factor(political_orientation,
+                        levels = 1:5,
+                        labels = c("1\nLinks", "2", "3\nMitte", "4", "5\nRechts")))
+
+plot_pol_voting_einzeln <- function(initiative_name, dateiname) {
+  d <- pol_voting_data %>% filter(initiative == initiative_name)
+
+  p <- ggplot(d, aes(x = pol_5, y = voting_M, fill = banner_typ)) +
+    geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+    geom_text(aes(label = sprintf("%.2f", voting_M)),
+              position = position_dodge(width = 0.75),
+              vjust = -0.4, size = 3.4) +
+    scale_fill_manual(values = farben_banner, name = "Banner-Typ") +
+    scale_y_continuous(limits = c(0, 7), breaks = 1:7,
+                       expand = expansion(mult = c(0, 0.05))) +
+    labs(title = paste0("Wahlabsicht nach politischer Orientierung – ", initiative_name),
+         y = "Wahlabsicht (Skala 1–7)") +
+    theme_thesis()
+
+  print(p)
+  save_plot(p, dateiname, width = 9, height = 5)
+}
+
+plot_pol_voting_einzeln("Nachhaltigkeitsinitiative",
+                        "abb_11_pol_orient_nachhaltigkeit")
+plot_pol_voting_einzeln("Zivildienstgesetz",
+                        "abb_12_pol_orient_zivildienst")
+```
+
+---
+
+# 6 Abbildungen 13 und 14: Wahlabsicht nach Entscheidungsstil
+
+```{r abb_13_14_entscheidungsstil, fig.width=8, fig.height=5}
+ent_voting_data <- daten %>%
+  group_by(initiative, entscheidungsstil, banner_typ) %>%
+  summarise(voting_M = mean(voting_intention, na.rm = TRUE),
+            .groups = "drop")
+
+plot_ent_voting_einzeln <- function(initiative_name, dateiname) {
+  d <- ent_voting_data %>% filter(initiative == initiative_name)
+
+  p <- ggplot(d, aes(x = entscheidungsstil, y = voting_M, fill = banner_typ)) +
+    geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+    geom_text(aes(label = sprintf("%.2f", voting_M)),
+              position = position_dodge(width = 0.75),
+              vjust = -0.4, size = 3.8) +
+    scale_fill_manual(values = farben_banner, name = "Banner-Typ") +
+    scale_y_continuous(limits = c(0, 7), breaks = 1:7,
+                       expand = expansion(mult = c(0, 0.05))) +
+    labs(title = paste0("Wahlabsicht nach Entscheidungsstil – ", initiative_name),
+         y = "Wahlabsicht (Skala 1–7)") +
+    theme_thesis()
+
+  print(p)
+  save_plot(p, dateiname, width = 8, height = 5)
+}
+
+plot_ent_voting_einzeln("Nachhaltigkeitsinitiative",
+                        "abb_13_entscheidungsstil_nachhaltigkeit")
+plot_ent_voting_einzeln("Zivildienstgesetz",
+                        "abb_14_entscheidungsstil_zivildienst")
+```
+
+---
+
+# 7 Abbildungen 15 und 16: Wahlabsicht nach Geschlecht
+
+```{r abb_15_16_geschlecht, fig.width=7, fig.height=5}
+geschlecht_data <- daten %>%
+  group_by(initiative, geschlecht, banner_typ) %>%
+  summarise(voting_M = mean(voting_intention, na.rm = TRUE),
+            .groups = "drop") %>%
+  mutate(geschlecht = str_to_title(as.character(geschlecht)))
+
+plot_geschlecht_einzeln <- function(initiative_name, dateiname) {
+  d <- geschlecht_data %>% filter(initiative == initiative_name)
+
+  p <- ggplot(d, aes(x = geschlecht, y = voting_M, fill = banner_typ)) +
+    geom_col(position = position_dodge(width = 0.75), width = 0.6) +
+    geom_text(aes(label = sprintf("%.2f", voting_M)),
+              position = position_dodge(width = 0.75),
+              vjust = -0.4, size = 4.2) +
+    scale_fill_manual(values = farben_banner, name = "Banner-Typ") +
+    scale_y_continuous(limits = c(0, 7), breaks = 1:7,
+                       expand = expansion(mult = c(0, 0.05))) +
+    labs(title = paste0("Wahlabsicht nach Geschlecht – ", initiative_name),
+         y = "Wahlabsicht (Skala 1–7)") +
+    theme_thesis()
+
+  print(p)
+  save_plot(p, dateiname, width = 7, height = 5)
+}
+
+plot_geschlecht_einzeln("Nachhaltigkeitsinitiative",
+                        "abb_15_geschlecht_nachhaltigkeit")
+plot_geschlecht_einzeln("Zivildienstgesetz",
+                        "abb_16_geschlecht_zivildienst")
+```
+
+---
+
+# 8 Abbildungen 17 und 18: Wahlabsicht nach Altersgruppe
+
+```{r abb_17_18_alter, fig.width=8, fig.height=5}
+alter_data <- daten %>%
+  group_by(initiative, alter, banner_typ) %>%
+  summarise(voting_M = mean(voting_intention, na.rm = TRUE),
+            .groups = "drop")
+
+plot_alter_einzeln <- function(initiative_name, dateiname) {
+  d <- alter_data %>% filter(initiative == initiative_name)
+
+  p <- ggplot(d, aes(x = alter, y = voting_M, fill = banner_typ)) +
+    geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+    geom_text(aes(label = sprintf("%.2f", voting_M)),
+              position = position_dodge(width = 0.75),
+              vjust = -0.4, size = 3.8) +
+    scale_fill_manual(values = farben_banner, name = "Banner-Typ") +
+    scale_y_continuous(limits = c(0, 7), breaks = 1:7,
+                       expand = expansion(mult = c(0, 0.05))) +
+    labs(title = paste0("Wahlabsicht nach Altersgruppe – ", initiative_name),
+         y = "Wahlabsicht (Skala 1–7)") +
+    theme_thesis()
+
+  print(p)
+  save_plot(p, dateiname, width = 8, height = 5)
+}
+
+plot_alter_einzeln("Nachhaltigkeitsinitiative",
+                   "abb_17_alter_nachhaltigkeit")
+plot_alter_einzeln("Zivildienstgesetz",
+                   "abb_18_alter_zivildienst")
+```
+
+---
+
+# 9 Abbildung 19: Korrelationsmatrix (gesamt)
+
+Alle Korrelationen werden mit der **invertierten Wahlabsicht** berechnet,
+damit positive Koeffizienten konsistent „mehr Zustimmung zur jeweiligen
+Initiative" bedeuten. Verwendet wird die Spearman-Rangkorrelation, da
+mehrere Variablen ordinal skaliert sind.
+
+```{r abb_19_korrelation_gesamt, fig.width=9, fig.height=7}
+vars_gesamt <- daten %>%
+  transmute(
+    Wahlabsicht               = wahlabsicht_invertiert,
+    Glaubwürdigkeit           = credibility,
+    `Wahrg. Personalisierung` = personalization_felt,
+    `Banner-Typ`              = banner_num,
+    `Pol. Orient.`            = political_orientation,
+    Alter                     = alter_num,
+    Geschlecht                = geschlecht_num,
+    Entscheidungsstil         = entscheidung_num
+  )
+
+M_gesamt <- cor(vars_gesamt, use = "pairwise.complete.obs", method = "spearman")
+
+corrplot(M_gesamt, method = "color", type = "upper",
+         addCoef.col = "black", number.cex = 0.75,
+         tl.col = "black", tl.srt = 45,
+         col = colorRampPalette(c("#C0392B", "white", "#27AE60"))(200),
+         mar = c(0, 0, 3, 0),
+         title = "Korrelationsmatrix")
+```
+
+---
+
+# 10 Abbildungen 20 und 21: Korrelationsmatrix pro Initiative
+
+```{r abb_20_21_korrelation_pro_initiative, fig.width=9, fig.height=5}
+for (ini in c("1", "2")) {
+  label <- if (ini == "1") {
+    "Korrelationsmatrix Nachhaltigkeitsinitiative"
+  } else {
+    "Korrelationsmatrix Zivildienstgesetz"
+  }
+
+  M_i <- daten %>%
+    filter(initiative_id == ini) %>%
+    transmute(
+      Wahlabsicht               = wahlabsicht_invertiert,
+      Glaubwürdigkeit           = credibility,
+      `Wahrg. Personalisierung` = personalization_felt,
+      `Banner-Typ`              = banner_num,
+      `Pol. Orient.`            = political_orientation,
+      Alter                     = alter_num,
+      Geschlecht                = geschlecht_num,
+      Entscheidungsstil         = entscheidung_num
+    ) %>%
+    cor(use = "pairwise.complete.obs", method = "spearman")
+
+  corrplot(M_i, method = "color", type = "upper",
+           title = label, mar = c(0, 0, 3, 0),
+           addCoef.col = "black", number.cex = 0.75,
+           tl.col = "black", tl.srt = 45,
+           col = colorRampPalette(c("#C0392B", "white", "#27AE60"))(200))
+}
+```
+
+---
+
+# 11 Hinweise zu Inversion und Kodierungen
+
+Für die Vorlage *Zivildienstgesetz* (`initiative_id == "2"`) wurde die Wahlabsicht
+gemäss `wahlabsicht_invertiert = 8 - voting_intention` umkodiert. Dadurch
+bedeutet ein hoher Wert in den Korrelationsmatrizen konsistent **Zustimmung zur
+jeweiligen Initiative**.
+
+**Kodierungen der binären und ordinalen Variablen:**
+
+- `Geschlecht`: 0 = weiblich, 1 = männlich. Positive Korrelation mit der
+  Wahlabsicht bedeutet „Männer stimmen tendenziell eher zu".
+- `Banner-Typ`: 0 = neutral, 1 = personalisiert. Positive Korrelation =
+  personalisiertes Banner geht mit höherem Wert einher.
+- `Pol. Orient.`: 1 = links, 5 = rechts. Positive Korrelation mit
+  Wahlabsicht = rechtsstehende Personen stimmen eher zu.
+- `Entscheidungsstil`: 1 = rational, 2 = ausgewogen, 3 = emotional.
+- `Alter`: 1 = 18–29, 2 = 30–44, 3 = 45–59, 4 = 60+.
+
+---
+
+# 12 Session Info
+
+```{r session, echo=FALSE}
+sessionInfo()
+```
